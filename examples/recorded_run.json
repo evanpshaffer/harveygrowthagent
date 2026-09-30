@@ -1,343 +1,206 @@
 {
- "model": "scripted-fixture",
- "recorded": "Scripted fixture written during development for tests and offline demos. It is not a live model run. Replace it with: python -m growth_agent.brief --record examples/recorded_run.json",
+ "model": "claude-sonnet-5-5",
+ "recorded": "live run",
  "turns": [
   {
    "blocks": [
     {
-     "type": "text",
-     "text": "Reading the evidence behind the top signals and the creative library."
+     "id": "toolu_011yx8NzCN61Y5eWKWQPJm2E",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {},
+     "name": "list_creatives",
+     "type": "tool_use",
+     "toolset_name": null
     },
     {
-     "type": "tool_use",
-     "id": "toolu_fixture_01",
-     "name": "get_evidence",
+     "id": "toolu_01EjQFZ7nXVKGhKEdnNXvBNx",
+     "caller": {
+      "type": "direct"
+     },
      "input": {
       "ids": [
        "SEG.platform_objective",
-       "SEG.objective",
        "MIX.objective",
-       "SEG.platform",
-       "FUNNEL.platform",
-       "WEEK.campaigns",
-       "FATIGUE.curve",
+       "EXP.E013",
+       "EXP.E009",
        "EXP.E003",
-       "EXP.E007",
-       "EXP.E013"
+       "DQ.attribution_lag",
+       "SEG.theme",
+       "FATIGUE.curve",
+       "ZERO.opportunities",
+       "SEG.platform",
+       "SEG.objective"
       ]
-     }
-    },
-    {
+     },
+     "name": "get_evidence",
      "type": "tool_use",
-     "id": "toolu_fixture_02",
-     "name": "list_creatives",
-     "input": {}
+     "toolset_name": null
     }
    ],
    "stop_reason": "tool_use",
    "usage": {
-    "input_tokens": 0,
-    "output_tokens": 0
+    "input_tokens": 4,
+    "output_tokens": 1036,
+    "cache_creation_input_tokens": 15723,
+    "cache_read_input_tokens": 0
    }
   },
   {
    "blocks": [
     {
-     "type": "text",
-     "text": "Testing three designs against the guardrails."
+     "id": "toolu_01VHPE3SbKxNVbwkX9Km6ZkD",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {
+      "proposal": "{\"proposal_id\":\"P1\",\"title\":\"Google Webinar vs Demo head-to-head\",\"hypothesis\":\"In settled campaigns Google Webinar returns more pipeline per dollar than Google Demo; a randomized split will show whether the offer drives it.\",\"platform\":\"Google\",\"audience\":\"Law Firm - Enterprise\",\"region\":\"US\",\"control\":{\"label\":\"Demo (current mix)\",\"description\":\"Demo offer, ROI theme, Law Firm creative\",\"objective\":\"Demo\",\"cta\":\"Book Demo\",\"theme\":\"ROI\",\"creative_id\":\"CR001\"},\"variant\":{\"label\":\"Webinar\",\"description\":\"Webinar offer, ROI theme, same creative\",\"objective\":\"Webinar\",\"cta\":\"Register\",\"theme\":\"ROI\",\"creative_id\":\"CR001\"},\"primary_metric\":\"pipeline per $\",\"daily_budget_per_arm\":250,\"runtime_days\":28,\"decision_rule\":\"Read on day 42 after attribution settles. If Webinar is at least 25% higher on pipeline per $ than Demo, shift Google budget toward Webinar and repeat the split on Meta before any wider move; if within 25% either way, hold the mix and extend the read; if Demo is at least 25% higher, keep Demo.\",\"guardrail_metrics\":[\"cost per lead\",\"click-through rate\",\"qualified lead rate\"],\"evidence_ids\":[\"SIG.01\",\"SEG.platform_objective\",\"MIX.objective\"]}}"
+     },
+     "name": "validate_experiment",
+     "type": "tool_use",
+     "toolset_name": null
     },
     {
-     "type": "tool_use",
-     "id": "toolu_fixture_03",
-     "name": "validate_experiment",
+     "id": "toolu_019fvVBM7Bz4iiPffCE9tvX1",
+     "caller": {
+      "type": "direct"
+     },
      "input": {
-      "proposal": {
-       "proposal_id": "EXP-2026-W27-1",
-       "title": "Webinar vs Demo offer on Google for Law Firm Enterprise",
-       "hypothesis": "For the same audience and the same ROI message, a webinar offer produces more pipeline per dollar than a demo offer.",
-       "platform": "Google",
-       "audience": "Law Firm - Enterprise",
-       "region": "US",
-       "control": {
-        "label": "Control",
-        "description": "Demo offer with the ROI message",
-        "objective": "Demo",
-        "theme": "ROI",
-        "creative_id": "CR001",
-        "cta": "Book Demo"
-       },
-       "variant": {
-        "label": "Variant",
-        "description": "Webinar offer with the ROI message",
-        "objective": "Webinar",
-        "theme": "ROI",
-        "creative_id": "CR001",
-        "cta": "Register"
-       },
-       "primary_metric": "Pipeline per $",
-       "guardrail_metrics": [
-        "Cost per lead",
-        "CTR",
-        "Qualified lead rate"
-       ],
-       "daily_budget_per_arm": 600,
-       "runtime_days": 28,
-       "decision_rule": "Read on day 42. If Webinar's pipeline per dollar is at least 25% higher than Demo's, make Webinar the default Google offer for this audience. If the arms are within 25% of each other, keep both and repeat on a second audience. If Demo is at least 25% higher, keep the current mix.",
-       "evidence_ids": [
-        "SIG.01",
-        "SEG.platform_objective",
-        "MIX.objective"
-       ],
-       "retest_of": "E013",
-       "status": "DRAFT",
-       "requires_human_approval": true
-      }
-     }
+      "proposal": "{\"proposal_id\":\"P2\",\"title\":\"Customer Proof vs AI Productivity on Meta Webinar\",\"hypothesis\":\"E009 logged Customer Proof as a win, but settled campaigns point the other way; a clean re-test settles it.\",\"platform\":\"Meta\",\"audience\":\"Law Firm - Enterprise\",\"region\":\"US\",\"control\":{\"label\":\"AI Productivity\",\"description\":\"Webinar offer, AI Productivity theme\",\"objective\":\"Webinar\",\"cta\":\"Register\",\"theme\":\"AI Productivity\",\"creative_id\":\"CR007\"},\"variant\":{\"label\":\"Customer Proof\",\"description\":\"Webinar offer, Customer Proof theme\",\"objective\":\"Webinar\",\"cta\":\"Register\",\"theme\":\"Customer Proof\",\"creative_id\":\"CR013\"},\"primary_metric\":\"pipeline per $\",\"daily_budget_per_arm\":250,\"runtime_days\":28,\"decision_rule\":\"Read on day 42 after attribution settles. If Customer Proof is at least 15% higher on pipeline per $, keep it in the mix; if within 15% either way, stop scaling it and hold spend flat; if it is at least 15% lower, cut Customer Proof spend on Meta.\",\"guardrail_metrics\":[\"cost per lead\",\"click-through rate\",\"qualified lead rate\"],\"evidence_ids\":[\"EXP.E009\",\"SEG.theme\"]}}"
+     },
+     "name": "validate_experiment",
+     "type": "tool_use",
+     "toolset_name": null
     },
     {
-     "type": "tool_use",
-     "id": "toolu_fixture_04",
-     "name": "validate_experiment",
+     "id": "toolu_015cYbg8S9Mr1vT6fKth1iaC",
+     "caller": {
+      "type": "direct"
+     },
      "input": {
-      "proposal": {
-       "proposal_id": "EXP-2026-W27-2",
-       "title": "Content Download vs Demo offer on LinkedIn for Law Firm Enterprise",
-       "hypothesis": "On LinkedIn, a content download offer produces more pipeline per dollar than a demo offer.",
-       "platform": "LinkedIn",
-       "audience": "Law Firm - Enterprise",
-       "region": "US",
-       "control": {
-        "label": "Control",
-        "description": "Demo offer with the ROI message",
-        "objective": "Demo",
-        "theme": "ROI",
-        "creative_id": "CR002",
-        "cta": "Book Demo"
-       },
-       "variant": {
-        "label": "Variant",
-        "description": "Content download offer with the ROI message",
-        "objective": "Content Download",
-        "theme": "ROI",
-        "creative_id": "CR002",
-        "cta": "Download Guide"
-       },
-       "primary_metric": "Pipeline per $",
-       "guardrail_metrics": [
-        "Cost per lead",
-        "CTR"
-       ],
-       "daily_budget_per_arm": 1000,
-       "runtime_days": 28,
-       "decision_rule": "Read on day 42. If Content Download's pipeline per dollar is at least double Demo's, move LinkedIn Demo budget to Content Download.",
-       "evidence_ids": [
-        "SEG.platform_objective",
-        "SEG.platform"
-       ],
-       "status": "DRAFT",
-       "requires_human_approval": true
-      }
-     }
-    },
-    {
-     "type": "tool_use",
-     "id": "toolu_fixture_05",
+      "proposal": "{\"proposal_id\":\"P3\",\"title\":\"LinkedIn Webinar vs Content Download\",\"hypothesis\":\"E003 logged Webinar as a win on LinkedIn but settled campaigns disagree; re-test on an outcome metric.\",\"platform\":\"LinkedIn\",\"audience\":\"Law Firm - Enterprise\",\"region\":\"US\",\"control\":{\"label\":\"Content Download\",\"description\":\"Content Download offer, ROI theme\",\"objective\":\"Content Download\",\"cta\":\"Download Guide\",\"theme\":\"ROI\",\"creative_id\":\"CR001\"},\"variant\":{\"label\":\"Webinar\",\"description\":\"Webinar offer, ROI theme\",\"objective\":\"Webinar\",\"cta\":\"Register\",\"theme\":\"ROI\",\"creative_id\":\"CR001\"},\"primary_metric\":\"pipeline per $\",\"daily_budget_per_arm\":1000,\"runtime_days\":28,\"decision_rule\":\"Read on day 42 after attribution settles. If Webinar is at least 25% higher on pipeline per $, favor Webinar on LinkedIn; if within 25%, hold; otherwise favor Content Download.\",\"guardrail_metrics\":[\"cost per lead\",\"click-through rate\",\"qualified lead rate\"],\"evidence_ids\":[\"EXP.E003\",\"SEG.platform_objective\"]}}"
+     },
      "name": "validate_experiment",
-     "input": {
-      "proposal": {
-       "proposal_id": "EXP-2026-W27-3",
-       "title": "Role-targeted vs current targeting on Meta for Law Firm Enterprise",
-       "hypothesis": "On Meta, targeting legal roles directly produces opportunities at a lower cost than the current audience, even though each lead costs more.",
-       "platform": "Meta",
-       "audience": "Law Firm - Enterprise",
-       "region": "US",
-       "control": {
-        "label": "Control",
-        "description": "Webinar offer with the ROI message, shown to the audience as targeted today",
-        "objective": "Webinar",
-        "theme": "ROI",
-        "creative_id": "CR002",
-        "targeting": "Current legal-interest audience, as configured today (channel owner to confirm)",
-        "cta": "Register"
-       },
-       "variant": {
-        "label": "Variant",
-        "description": "Webinar offer with the ROI message, shown to a role-targeted audience",
-        "objective": "Webinar",
-        "theme": "ROI",
-        "creative_id": "CR002",
-        "targeting": "Role-targeted: general counsel, legal operations leaders and law firm partners",
-        "cta": "Register"
-       },
-       "primary_metric": "Cost per opportunity",
-       "guardrail_metrics": [
-        "Cost per lead",
-        "Qualified lead rate",
-        "CTR"
-       ],
-       "daily_budget_per_arm": 500,
-       "runtime_days": 28,
-       "decision_rule": "Read on day 42. If the role-targeted arm's cost per opportunity is at least 20% lower, make role targeting the Meta default even if cost per lead rises. If it is within 20%, keep current targeting. A higher cost per lead alone is not a reason to stop.",
-       "evidence_ids": [
-        "FUNNEL.platform",
-        "EXP.E007",
-        "SEG.platform"
-       ],
-       "retest_of": "E007",
-       "status": "DRAFT",
-       "requires_human_approval": true
-      }
-     }
+     "type": "tool_use",
+     "toolset_name": null
     }
    ],
    "stop_reason": "tool_use",
    "usage": {
-    "input_tokens": 0,
-    "output_tokens": 0
+    "input_tokens": 2,
+    "output_tokens": 2787,
+    "cache_creation_input_tokens": 17099,
+    "cache_read_input_tokens": 15723
    }
   },
   {
    "blocks": [
     {
-     "type": "text",
-     "text": "A LinkedIn Demo arm cannot reach the minimum sample within the budget ceiling. Redesigning around the offers LinkedIn can afford to test."
+     "id": "toolu_016nnC2kP4YRzSrTSiFjx4ms",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {
+      "proposal": "{\"proposal_id\":\"P2\",\"title\":\"Customer Proof vs AI Productivity on Meta Webinar (re-test of E009)\",\"hypothesis\":\"E009 logged Customer Proof as a win, but settled Meta campaigns point the other way; a clean re-test settles which message keeps its budget.\",\"platform\":\"Meta\",\"audience\":\"Law Firm - Enterprise\",\"region\":\"US\",\"control\":{\"label\":\"AI Productivity\",\"description\":\"Webinar offer, AI Productivity theme\",\"objective\":\"Webinar\",\"cta\":\"Register\",\"theme\":\"AI Productivity\",\"creative_id\":\"CR007\"},\"variant\":{\"label\":\"Customer Proof\",\"description\":\"Webinar offer, Customer Proof theme\",\"objective\":\"Webinar\",\"cta\":\"Register\",\"theme\":\"Customer Proof\",\"creative_id\":\"CR013\"},\"primary_metric\":\"pipeline per $\",\"daily_budget_per_arm\":250,\"runtime_days\":28,\"decision_rule\":\"Read on day 42 after attribution settles. If Customer Proof is at least 15% higher on pipeline per $, keep it in the mix; if within 15% either way, stop scaling it and hold spend flat; if it is at least 15% lower, cut Customer Proof spend on Meta.\",\"guardrail_metrics\":[\"cost per lead\",\"click-through rate\",\"qualified lead rate\"],\"evidence_ids\":[\"EXP.E009\",\"SEG.theme\"],\"retest_of\":\"E009\"}}"
+     },
+     "name": "validate_experiment",
+     "type": "tool_use",
+     "toolset_name": null
     },
     {
-     "type": "tool_use",
-     "id": "toolu_fixture_06",
-     "name": "validate_experiment",
+     "id": "toolu_011gF21vMXRmSPBnXfuPwFCu",
+     "caller": {
+      "type": "direct"
+     },
      "input": {
-      "proposal": {
-       "proposal_id": "EXP-2026-W27-2",
-       "title": "Content Download vs Webinar offer on LinkedIn for Law Firm Enterprise",
-       "hypothesis": "On LinkedIn, a content download offer produces opportunities at a lower cost than a webinar offer for the same audience and message.",
-       "platform": "LinkedIn",
-       "audience": "Law Firm - Enterprise",
-       "region": "US",
-       "control": {
-        "label": "Control",
-        "description": "Webinar offer with the ROI message",
-        "objective": "Webinar",
-        "theme": "ROI",
-        "creative_id": "CR002",
-        "cta": "Register"
-       },
-       "variant": {
-        "label": "Variant",
-        "description": "Content download offer with the ROI message",
-        "objective": "Content Download",
-        "theme": "ROI",
-        "creative_id": "CR002",
-        "cta": "Download Guide"
-       },
-       "primary_metric": "Cost per opportunity",
-       "guardrail_metrics": [
-        "Cost per lead",
-        "Qualified lead rate",
-        "CTR"
-       ],
-       "daily_budget_per_arm": 750,
-       "runtime_days": 35,
-       "decision_rule": "Read on day 49. If Content Download's cost per opportunity is at least 30% lower than Webinar's, make it the default LinkedIn offer and confirm on pipeline at day 90. If neither arm gets within reach of Meta's cost per opportunity in settled campaigns, recommend moving LinkedIn budget to Google and Meta.",
-       "evidence_ids": [
-        "SEG.platform_objective",
-        "SEG.platform",
-        "EXP.E003"
-       ],
-       "retest_of": "E003",
-       "status": "DRAFT",
-       "requires_human_approval": true
-      }
-     }
+      "proposal": "{\"proposal_id\":\"P3\",\"title\":\"LinkedIn Webinar vs Content Download (confirmation of E003)\",\"hypothesis\":\"E003 logged Webinar as a win on LinkedIn but settled campaigns disagree; re-test on an outcome metric.\",\"platform\":\"LinkedIn\",\"audience\":\"Law Firm - Enterprise\",\"region\":\"US\",\"control\":{\"label\":\"Content Download\",\"description\":\"Content Download offer, ROI theme\",\"objective\":\"Content Download\",\"cta\":\"Download Guide\",\"theme\":\"ROI\",\"creative_id\":\"CR001\"},\"variant\":{\"label\":\"Webinar\",\"description\":\"Webinar offer, ROI theme\",\"objective\":\"Webinar\",\"cta\":\"Register\",\"theme\":\"ROI\",\"creative_id\":\"CR001\"},\"primary_metric\":\"pipeline per $\",\"daily_budget_per_arm\":1000,\"runtime_days\":28,\"decision_rule\":\"Read on day 42 after attribution settles. If Webinar is at least 25% higher on pipeline per $, favor Webinar on LinkedIn; if within 25%, hold the LinkedIn mix; if Content Download is at least 25% higher, favor Content Download. Treat the read as provisional if either arm has fewer than 30 opportunities, and use qualified lead rate as the tiebreaker.\",\"guardrail_metrics\":[\"cost per lead\",\"click-through rate\",\"qualified lead rate\"],\"evidence_ids\":[\"EXP.E003\",\"SEG.platform_objective\"],\"retest_of\":\"E003\"}}"
+     },
+     "name": "validate_experiment",
+     "type": "tool_use",
+     "toolset_name": null
     }
    ],
    "stop_reason": "tool_use",
    "usage": {
-    "input_tokens": 0,
-    "output_tokens": 0
+    "input_tokens": 2,
+    "output_tokens": 1964,
+    "cache_creation_input_tokens": 3858,
+    "cache_read_input_tokens": 32822
    }
   },
   {
    "blocks": [
     {
-     "type": "tool_use",
-     "id": "toolu_fixture_07",
-     "name": "submit_brief",
+     "id": "toolu_018931Cy1X4JMCw1jRiYRr3y",
+     "caller": {
+      "type": "direct"
+     },
      "input": {
       "brief": {
        "headline": {
-        "text": "Google's budget moved from Webinar to Demo over the last 8 weeks, yet in settled campaigns Google Webinar returns 3.2x the pipeline per dollar of Google Demo. No campaigns are scheduled past Jun 30, so the next launches decide whether that gets corrected.",
+        "text": "Google budget moved from Webinar to Demo, and Demo now takes 92% of Google spend. In settled campaigns Google Demo returns $612 of pipeline per dollar against $1,953 for Webinar, so the team needs a clean head-to-head before spending more on Demo.",
         "evidence_ids": [
-         "SIG.01",
-         "WEEK.program_status"
+         "MIX.objective",
+         "SEG.platform_objective"
         ]
        },
        "what_happened": [
         {
-         "text": "Spend fell 53% week over week to $17,013 across 9 campaigns. Almost all of the drop is campaigns ending: the 6 campaigns live through both weeks were flat on spend.",
+         "text": "Nine campaigns spent $17,013 in the week of Jun 24 to Jun 30, down 53% from $36,140 the week before. They produced 86 conversions, down 67%.",
          "evidence_ids": [
-          "WEEK.totals",
+          "WEEK.totals"
+         ]
+        },
+        {
+         "text": "Almost all of the spend drop came from campaigns that ended or wound down, not from changes inside live campaigns. The 6 campaigns live both weeks held spend within 1%, while CTR slipped from 2.18% to 1.97%.",
+         "evidence_ids": [
           "WEEK.spend_bridge",
           "WEEK.same_store"
          ]
         },
         {
-         "text": "Like for like, CTR slipped from 2.18% to 1.97% and conversions went from 60 to 57. Delivery softened slightly and lead capture held.",
-         "evidence_ids": [
-          "WEEK.same_store"
-         ]
-        },
-        {
-         "text": "Qualified leads, opportunities and pipeline for the week cannot be judged yet. Inside the lag window, qualified leads are only 27% of what their conversions would normally produce.",
-         "evidence_ids": [
-          "DQ.attribution_lag"
-         ]
-        },
-        {
-         "text": "The program is winding down. 6 campaigns were still live on Jun 30, 0 are scheduled past it, and weekly spend is down 91% from the peak week.",
+         "text": "The program is winding down: 6 campaigns were live on Jun 30 and none are scheduled past it. Weekly spend is down 91% from the March peak.",
          "evidence_ids": [
           "WEEK.program_status"
          ]
         },
         {
-         "text": "C119 on LinkedIn is running 24% below its own CTR baseline at 60 days old, past the point where LinkedIn creative starts to wear out.",
+         "text": "Lead capture is current, but qualified leads, opportunities and pipeline for this week are provisional. Qualified leads in the window are only 27% of what conversions would normally produce, so this week gives no read on outcomes.",
          "evidence_ids": [
-          "WEEK.campaigns",
-          "FATIGUE.curve"
+          "DQ.attribution_lag"
          ]
         }
        ],
        "why": [
         {
-         "text": "Offer is the biggest lever. In settled campaigns Webinar returns 1.42x comparable campaigns and Demo 0.46x, and the gap holds on all 3 platforms. Demo still takes 49% of spend.",
+         "text": "The offer mix on Google flipped. Webinar fell from 55% to 5% of Google spend and Demo rose from 42% to 92% over the last 8 weeks versus earlier.",
+         "evidence_ids": [
+          "MIX.objective"
+         ]
+        },
+        {
+         "text": "In settled campaigns, Google Webinar returns $1,953 of pipeline per dollar and Google Demo returns $612. That is observational, so it tells us where to test, not what causes the gap.",
+         "evidence_ids": [
+          "SEG.platform_objective"
+         ]
+        },
+        {
+         "text": "The one logged test favoring Demo on Google, E013, is not a valid read. It ran 5 days against a 14-day minimum on a sample of 31, and it used a proxy metric. It should not back the shift.",
+         "evidence_ids": [
+          "EXP.E013"
+         ]
+        },
+        {
+         "text": "Across platforms, Demo returns 0.46x the pipeline of comparable campaigns while taking 49% of settled spend. Webinar returns 1.42x on 41%.",
          "evidence_ids": [
           "SEG.objective"
          ]
         },
         {
-         "text": "Google moved the wrong way. Webinar fell from 55% to 5% of Google spend while Demo rose from 42% to 92%. The only test favoring Demo, E013, ran 5 days on a sample of 31 and is rejected.",
-         "evidence_ids": [
-          "MIX.objective",
-          "EXP.E013"
-         ]
-        },
-        {
-         "text": "LinkedIn takes 31% of settled spend and returns 0.06x comparable campaigns. 24 of its 41 settled campaigns produced no opportunities.",
-         "evidence_ids": [
-          "SEG.platform",
-          "ZERO.opportunities"
-         ]
-        },
-        {
-         "text": "Meta buys leads at $10 each but only 30% qualify, against 63% on Google, so its low cost per lead overstates its value.",
+         "text": "LinkedIn is the weakest platform in settled campaigns. It costs $3,555 per opportunity, against $71 on Google and $164 on Meta.",
          "evidence_ids": [
           "FUNNEL.platform"
-         ]
-        },
-        {
-         "text": "Region is not a driver. DACH looks weak on raw numbers, but like-for-like indexes run from 0.93x to 1.10x once platform and offer are held constant.",
-         "evidence_ids": [
-          "SEG.region"
          ]
         }
        ],
@@ -346,244 +209,887 @@
          "rank": 1,
          "signal_id": "SIG.01",
          "rationale": {
-          "text": "Google Webinar returns 3.2x the pipeline per dollar of Google Demo in settled campaigns, yet Demo is now 92% of Google spend. The only test behind that shift is a rejected false winner, so this is the largest budget decision resting on no valid evidence.",
+          "text": "Google moved most of its budget to Demo while settled Google Webinar returns $1,953 of pipeline per dollar against $612 for Demo. No valid test supports the move, so this is the largest decision the team is making now.",
           "evidence_ids": [
-           "SIG.01",
+           "SEG.platform_objective",
            "MIX.objective",
            "EXP.E013"
           ]
          },
-         "expected_learning": "If Webinar wins, Google's default offer switches back and the budget follows. If Demo holds up under a valid test, the team keeps the current mix with real evidence behind it.",
+         "expected_learning": "Whichever way it lands, it tells the team whether to rebuild Google Webinar spend or keep Demo. It also says whether the split is worth repeating on Meta and LinkedIn.",
          "proposal": {
-          "proposal_id": "EXP-2026-W27-1",
-          "title": "Webinar vs Demo offer on Google for Law Firm Enterprise",
-          "hypothesis": "For the same audience and the same ROI message, a webinar offer produces more pipeline per dollar than a demo offer.",
+          "proposal_id": "P1",
+          "title": "Google Webinar vs Demo head-to-head",
+          "hypothesis": "In settled campaigns Google Webinar returns more pipeline per dollar than Google Demo; a randomized split will show whether the offer drives it.",
           "platform": "Google",
           "audience": "Law Firm - Enterprise",
           "region": "US",
           "control": {
-           "label": "Control",
-           "description": "Demo offer with the ROI message",
+           "label": "Demo (current mix)",
+           "description": "Demo offer, ROI theme, Law Firm creative",
            "objective": "Demo",
+           "cta": "Book Demo",
            "theme": "ROI",
-           "creative_id": "CR001",
-           "cta": "Book Demo"
+           "creative_id": "CR001"
           },
           "variant": {
-           "label": "Variant",
-           "description": "Webinar offer with the ROI message",
+           "label": "Webinar",
+           "description": "Webinar offer, ROI theme, same creative",
            "objective": "Webinar",
+           "cta": "Register",
            "theme": "ROI",
-           "creative_id": "CR001",
-           "cta": "Register"
+           "creative_id": "CR001"
           },
-          "primary_metric": "Pipeline per $",
-          "guardrail_metrics": [
-           "Cost per lead",
-           "CTR",
-           "Qualified lead rate"
-          ],
-          "daily_budget_per_arm": 600,
+          "primary_metric": "pipeline per $",
+          "daily_budget_per_arm": 250,
           "runtime_days": 28,
-          "decision_rule": "Read on day 42. If Webinar's pipeline per dollar is at least 25% higher than Demo's, make Webinar the default Google offer for this audience. If the arms are within 25% of each other, keep both and repeat on a second audience. If Demo is at least 25% higher, keep the current mix.",
+          "decision_rule": "Read on day 42 after attribution settles. If Webinar is at least 25% higher on pipeline per $ than Demo, shift Google budget toward Webinar and repeat the split on Meta before any wider move; if within 25% either way, hold the mix and extend the read; if Demo is at least 25% higher, keep Demo.",
+          "guardrail_metrics": [
+           "cost per lead",
+           "click-through rate",
+           "qualified lead rate"
+          ],
           "evidence_ids": [
            "SIG.01",
            "SEG.platform_objective",
            "MIX.objective"
           ],
-          "retest_of": "E013",
-          "status": "DRAFT",
-          "requires_human_approval": true
+          "requires_human_approval": true,
+          "status": "DRAFT"
          }
         },
         {
          "rank": 2,
          "signal_id": "SIG.06",
          "rationale": {
-          "text": "LinkedIn Demo returns $5 of pipeline per dollar and cannot be tested within the budget ceiling, so the affordable question is which other offer LinkedIn should run. E003 favored Webinar, but in settled LinkedIn campaigns Webinar returns 0.60x the pipeline per dollar of Content Download.",
+          "text": "LinkedIn holds a large share of spend but returns far less than comparable campaigns, so its offer mix matters. The E003 Webinar win is directional only, and settled LinkedIn data shows Webinar at 0.60x Content Download, so the team needs a clean read.",
           "evidence_ids": [
-           "SEG.platform_objective",
-           "EXP.E003"
+           "EXP.E003",
+           "SEG.platform_objective"
           ]
          },
-         "expected_learning": "It tells the team which offer gives LinkedIn its best chance before any decision to cut the channel, and it settles a directional result that campaign data disagrees with.",
+         "expected_learning": "It shows which LinkedIn offer deserves the remaining LinkedIn budget. It also shows whether the E003 win holds on an outcome metric.",
          "proposal": {
-          "proposal_id": "EXP-2026-W27-2",
-          "title": "Content Download vs Webinar offer on LinkedIn for Law Firm Enterprise",
-          "hypothesis": "On LinkedIn, a content download offer produces opportunities at a lower cost than a webinar offer for the same audience and message.",
+          "proposal_id": "P3",
+          "title": "LinkedIn Webinar vs Content Download (confirmation of E003)",
+          "hypothesis": "E003 logged Webinar as a win on LinkedIn but settled campaigns disagree; re-test on an outcome metric.",
           "platform": "LinkedIn",
           "audience": "Law Firm - Enterprise",
           "region": "US",
           "control": {
-           "label": "Control",
-           "description": "Webinar offer with the ROI message",
-           "objective": "Webinar",
+           "label": "Content Download",
+           "description": "Content Download offer, ROI theme",
+           "objective": "Content Download",
+           "cta": "Download Guide",
            "theme": "ROI",
-           "creative_id": "CR002",
-           "cta": "Register"
+           "creative_id": "CR001"
           },
           "variant": {
-           "label": "Variant",
-           "description": "Content download offer with the ROI message",
-           "objective": "Content Download",
+           "label": "Webinar",
+           "description": "Webinar offer, ROI theme",
+           "objective": "Webinar",
+           "cta": "Register",
            "theme": "ROI",
-           "creative_id": "CR002",
-           "cta": "Download Guide"
+           "creative_id": "CR001"
           },
-          "primary_metric": "Cost per opportunity",
+          "primary_metric": "pipeline per $",
+          "daily_budget_per_arm": 1000,
+          "runtime_days": 28,
+          "decision_rule": "Read on day 42 after attribution settles. If Webinar is at least 25% higher on pipeline per $, favor Webinar on LinkedIn; if within 25%, hold the LinkedIn mix; if Content Download is at least 25% higher, favor Content Download. Treat the read as provisional if either arm has fewer than 30 opportunities, and use qualified lead rate as the tiebreaker.",
           "guardrail_metrics": [
-           "Cost per lead",
-           "Qualified lead rate",
-           "CTR"
+           "cost per lead",
+           "click-through rate",
+           "qualified lead rate"
           ],
-          "daily_budget_per_arm": 750,
-          "runtime_days": 35,
-          "decision_rule": "Read on day 49. If Content Download's cost per opportunity is at least 30% lower than Webinar's, make it the default LinkedIn offer and confirm on pipeline at day 90. If neither arm gets within reach of Meta's cost per opportunity in settled campaigns, recommend moving LinkedIn budget to Google and Meta.",
           "evidence_ids": [
-           "SEG.platform_objective",
-           "SEG.platform",
-           "EXP.E003"
+           "EXP.E003",
+           "SEG.platform_objective"
           ],
           "retest_of": "E003",
-          "status": "DRAFT",
-          "requires_human_approval": true
+          "requires_human_approval": true,
+          "status": "DRAFT"
          }
         },
         {
          "rank": 3,
-         "signal_id": "SIG.16",
+         "signal_id": "SIG.11",
          "rationale": {
-          "text": "Meta has the lowest cost per lead at $10 but only 30% of its leads qualify, against 63% on Google. E007 found that broad targeting produced lower-quality leads, but it ran 18 days on a sample of 160 and is only directional.",
+          "text": "E009 logged Customer Proof as a trusted win on Meta, but settled Meta campaigns show it at 0.81x AI Productivity. The team needs to know which message keeps its budget.",
           "evidence_ids": [
-           "FUNNEL.platform",
-           "EXP.E007"
+           "EXP.E009",
+           "SEG.theme"
           ]
          },
-         "expected_learning": "It shows whether Meta's lead-quality gap is a targeting problem the team can fix, or a property of the channel that should cap how much budget it gets.",
+         "expected_learning": "It settles whether Customer Proof earns budget on Meta or only looked good in one test. It also shows which logged learnings the team can plan around.",
          "proposal": {
-          "proposal_id": "EXP-2026-W27-3",
-          "title": "Role-targeted vs current targeting on Meta for Law Firm Enterprise",
-          "hypothesis": "On Meta, targeting legal roles directly produces opportunities at a lower cost than the current audience, even though each lead costs more.",
+          "proposal_id": "P2",
+          "title": "Customer Proof vs AI Productivity on Meta Webinar (re-test of E009)",
+          "hypothesis": "E009 logged Customer Proof as a win, but settled Meta campaigns point the other way; a clean re-test settles which message keeps its budget.",
           "platform": "Meta",
           "audience": "Law Firm - Enterprise",
           "region": "US",
           "control": {
-           "label": "Control",
-           "description": "Webinar offer with the ROI message, shown to the audience as targeted today",
+           "label": "AI Productivity",
+           "description": "Webinar offer, AI Productivity theme",
            "objective": "Webinar",
-           "theme": "ROI",
-           "creative_id": "CR002",
-           "targeting": "Current legal-interest audience, as configured today (channel owner to confirm)",
-           "cta": "Register"
+           "cta": "Register",
+           "theme": "AI Productivity",
+           "creative_id": "CR007"
           },
           "variant": {
-           "label": "Variant",
-           "description": "Webinar offer with the ROI message, shown to a role-targeted audience",
+           "label": "Customer Proof",
+           "description": "Webinar offer, Customer Proof theme",
            "objective": "Webinar",
-           "theme": "ROI",
-           "creative_id": "CR002",
-           "targeting": "Role-targeted: general counsel, legal operations leaders and law firm partners",
-           "cta": "Register"
+           "cta": "Register",
+           "theme": "Customer Proof",
+           "creative_id": "CR013"
           },
-          "primary_metric": "Cost per opportunity",
-          "guardrail_metrics": [
-           "Cost per lead",
-           "Qualified lead rate",
-           "CTR"
-          ],
-          "daily_budget_per_arm": 500,
+          "primary_metric": "pipeline per $",
+          "daily_budget_per_arm": 250,
           "runtime_days": 28,
-          "decision_rule": "Read on day 42. If the role-targeted arm's cost per opportunity is at least 20% lower, make role targeting the Meta default even if cost per lead rises. If it is within 20%, keep current targeting. A higher cost per lead alone is not a reason to stop.",
-          "evidence_ids": [
-           "FUNNEL.platform",
-           "EXP.E007",
-           "SEG.platform"
+          "decision_rule": "Read on day 42 after attribution settles. If Customer Proof is at least 15% higher on pipeline per $, keep it in the mix; if within 15% either way, stop scaling it and hold spend flat; if it is at least 15% lower, cut Customer Proof spend on Meta.",
+          "guardrail_metrics": [
+           "cost per lead",
+           "click-through rate",
+           "qualified lead rate"
           ],
-          "retest_of": "E007",
-          "status": "DRAFT",
-          "requires_human_approval": true
+          "evidence_ids": [
+           "EXP.E009",
+           "SEG.theme"
+          ],
+          "retest_of": "E009",
+          "requires_human_approval": true,
+          "status": "DRAFT"
          }
         }
        ],
        "creative_recommendations": [
         {
-         "text": "Make ROI the default message. It returns 1.29x comparable campaigns, is above benchmark in 6 of 6 platform and offer cells, and two trusted tests agree.",
+         "text": "Lead Law Firm - Enterprise work with the ROI message. In settled campaigns the ROI Static Law Firm creative is the best performer against comparable campaigns at 1.45x, and ROI for Law Firm - Enterprise is among the strongest pairings at 1.52x.",
          "evidence_ids": [
-          "SEG.theme",
-          "EXP.E001",
-          "EXP.E014"
+          "CREATIVE.performance",
+          "THEME.by_audience"
          ]
         },
         {
-         "text": "Refresh paid-social creative on a schedule. Meta CTR holds for 6 weeks and LinkedIn for 7 before it decays. CR021, the one active creative that has never run, is available as a fresh variant for Law Firm audiences.",
+         "text": "Do not add creative spend behind Customer Proof for Mid-Market audiences until experiment 3 reads. Customer Proof for In-House - Mid-Market is among the weakest pairings at 0.64x, and the Customer Proof Static In-House creative is the weakest creative at 0.40x.",
          "evidence_ids": [
-          "FATIGUE.curve",
+          "THEME.by_audience",
+          "CREATIVE.performance"
+         ]
+        },
+        {
+         "text": "Plan creative refresh by platform. Meta CTR holds for 6 weeks and is at 79% of launch level by week 9. LinkedIn holds for 7 weeks and is at 71% by week 10. Google shows no decay with age.",
+         "evidence_ids": [
+          "FATIGUE.curve"
+         ]
+        },
+        {
+         "text": "CR021 (Workflow Automation, Video, Law Firm) has never run. Keep it ready as the fresh Video option for Law Firm audiences when the next launches are planned.",
+         "evidence_ids": [
           "CREATIVE.gaps"
          ]
         },
         {
-         "text": "Pull back on Customer Proof until it is re-tested. It returns 0.75x comparable campaigns, yet it took 24% of spend in the last 8 weeks.",
+         "text": "Security exists only in Static, with no Carousel or Video for either audience. Hold off on new Security formats until Security has a properly powered read.",
          "evidence_ids": [
-          "SIG.11",
-          "EXP.E009"
-         ]
-        },
-        {
-         "text": "Keep Security at exploration level. It returns 0.65x comparable campaigns, exists only in Static, and has no valid test behind it. Do not commission new formats until a small test says it is worth it.",
-         "evidence_ids": [
-          "SEG.theme",
           "CREATIVE.gaps",
-          "EXP.E011"
-         ]
-        },
-        {
-         "text": "Build on product UI rather than stock photography, and use a customer logo wall rather than a quote card for enterprise audiences. Both come from trusted tests.",
-         "evidence_ids": [
-          "EXP.E005",
-          "EXP.E016"
+          "SEG.theme"
          ]
         }
        ],
        "risks_and_observations": [
         {
-         "text": "The daily and summary tables disagree on outcomes: the daily table carries only 16% of conversions and 3.5% of pipeline. Every efficiency figure here assumes the summary is the reconciled record, which the data owner should confirm.",
+         "text": "Three strong signals get no test this week: a LinkedIn holdout, a Meta and LinkedIn creative rotation, and the Security read. The LinkedIn holdout matters because 24 of 41 settled LinkedIn campaigns produced no opportunities on $385,683 of spend, and last-touch attribution can hide influence on enterprise deals. Do not cut LinkedIn on this data alone.",
          "evidence_ids": [
-          "DQ.reconciliation"
+          "ZERO.opportunities",
+          "FATIGUE.curve",
+          "SEG.theme"
          ]
         },
         {
-         "text": "LinkedIn Demo could not be tested within the budget ceiling. It is 23% of settled spend at $5 of pipeline per dollar, so the team faces a decision without a test: pause it, or approve a larger test budget.",
+         "text": "Meta has $190,139 of spend behind creative past the point where CTR starts to fall. That is about 17% of Meta spend. It is untested this week, so treat it as a fast follow-up.",
          "evidence_ids": [
+          "FATIGUE.curve"
+         ]
+        },
+        {
+         "text": "The LinkedIn test in experiment 2 may read noisily because opportunity counts per arm will be low. The decision rule falls back on qualified lead rate if counts stay thin.",
+         "evidence_ids": [
+          "EXP.E003",
           "SEG.platform_objective"
          ]
         },
         {
-         "text": "Do not read LinkedIn's numbers as proof the channel has no value. Platform attribution can under-credit channels that influence enterprise deals, which is why the recommendation is to test before cutting.",
+         "text": "Last week's qualified leads, opportunities and pipeline are provisional, and 14 campaigns carry the immature flag. They are excluded from every benchmark used here.",
          "evidence_ids": [
-          "ZERO.opportunities"
+          "DQ.attribution_lag"
          ]
         },
         {
-         "text": "Three learnings the team may be relying on point the other way in settled campaign data: E003, E004 and E009. None is overturned, but each deserves a confirmation test before it shapes a plan.",
+         "text": "Only 6 campaigns were live on Jun 30 and none are scheduled past it. The three tests need new campaigns approved and launched, and they cannot read before day 42.",
          "evidence_ids": [
-          "EXP.summary"
+          "WEEK.program_status"
          ]
         },
         {
-         "text": "Campaign-to-experiment links are unreliable. 42 of 60 linked campaigns point to an experiment on a different platform, so no result in this brief was attributed through those links.",
+         "text": "Experiment links in the log are unreliable. Of 60 linked campaigns, 42 point to an experiment that ran on a different platform, so do not use those links to credit results.",
          "evidence_ids": [
           "DQ.experiment_links"
          ]
         }
        ]
       }
-     }
+     },
+     "name": "submit_brief",
+     "type": "tool_use",
+     "toolset_name": null
     }
    ],
    "stop_reason": "tool_use",
    "usage": {
-    "input_tokens": 0,
-    "output_tokens": 0
+    "input_tokens": 2,
+    "output_tokens": 6656,
+    "cache_creation_input_tokens": 2641,
+    "cache_read_input_tokens": 36680
+   }
+  },
+  {
+   "blocks": [
+    {
+     "id": "toolu_017dgvZ62Q7arMJjUazeLmAg",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {
+      "brief": {
+       "headline": {
+        "text": "Google budget moved from Webinar to Demo, and Demo now takes 92% of Google spend. In settled campaigns Google Demo returns $612 of pipeline per dollar against $1,953 for Webinar, so the team needs a clean head-to-head before spending more on Demo.",
+        "evidence_ids": [
+         "MIX.objective",
+         "SEG.platform_objective"
+        ]
+       },
+       "what_happened": [
+        {
+         "text": "Nine campaigns spent $17,013 in the week of Jun 24 to Jun 30, down 53% from $36,140 the week before. They produced 86 conversions, down 67%.",
+         "evidence_ids": [
+          "WEEK.totals"
+         ]
+        },
+        {
+         "text": "Almost all of the spend drop came from campaigns that ended or wound down, not from changes inside live campaigns. The 6 campaigns live both weeks held spend within 1%, while CTR slipped from 2.18% to 1.97%.",
+         "evidence_ids": [
+          "WEEK.spend_bridge",
+          "WEEK.same_store"
+         ]
+        },
+        {
+         "text": "The program is winding down: 6 campaigns were live on Jun 30 and none are scheduled past it. Weekly spend is down 91% from the March peak.",
+         "evidence_ids": [
+          "WEEK.program_status"
+         ]
+        },
+        {
+         "text": "Lead capture is current, but qualified leads, opportunities and pipeline for this week are provisional. Qualified leads in the window are only 27% of what conversions would normally produce, so this week gives no read on outcomes.",
+         "evidence_ids": [
+          "DQ.attribution_lag"
+         ]
+        }
+       ],
+       "why": [
+        {
+         "text": "The offer mix on Google flipped. Webinar fell from 55% to 5% of Google spend and Demo rose from 42% to 92% over the last 8 weeks versus earlier.",
+         "evidence_ids": [
+          "MIX.objective"
+         ]
+        },
+        {
+         "text": "In settled campaigns, Google Webinar returns $1,953 of pipeline per dollar and Google Demo returns $612. That is observational, so it tells us where to test, not what causes the gap.",
+         "evidence_ids": [
+          "SEG.platform_objective"
+         ]
+        },
+        {
+         "text": "The one logged test favoring Demo on Google, E013, is not a valid read. It ran 5 days against a 14-day minimum on a sample of 31, and it used a proxy metric. It should not back the shift.",
+         "evidence_ids": [
+          "EXP.E013"
+         ]
+        },
+        {
+         "text": "Across platforms, Demo returns 0.46x the pipeline of comparable campaigns while taking 49% of settled spend. Webinar returns 1.42x on 41%.",
+         "evidence_ids": [
+          "SEG.objective"
+         ]
+        },
+        {
+         "text": "LinkedIn is the weakest platform in settled campaigns. It costs $3,555 per opportunity, against $71 on Google and $164 on Meta.",
+         "evidence_ids": [
+          "FUNNEL.platform"
+         ]
+        }
+       ],
+       "experiments": [
+        {
+         "rank": 1,
+         "signal_id": "SIG.01",
+         "rationale": {
+          "text": "Google moved most of its budget to Demo while settled Google Webinar returns $1,953 of pipeline per dollar against $612 for Demo. No valid test supports the move, so this is the largest decision the team is making now.",
+          "evidence_ids": [
+           "SEG.platform_objective",
+           "MIX.objective",
+           "EXP.E013"
+          ]
+         },
+         "expected_learning": "Whichever way it lands, it tells the team whether to rebuild Google Webinar spend or keep Demo. It also says whether the split is worth repeating on Meta and LinkedIn.",
+         "proposal": {
+          "proposal_id": "P1",
+          "title": "Google Webinar vs Demo head-to-head",
+          "hypothesis": "In settled campaigns Google Webinar returns more pipeline per dollar than Google Demo; a randomized split will show whether the offer drives it.",
+          "platform": "Google",
+          "audience": "Law Firm - Enterprise",
+          "region": "US",
+          "control": {
+           "label": "Demo (current mix)",
+           "description": "Demo offer, ROI theme, Law Firm creative",
+           "objective": "Demo",
+           "cta": "Book Demo",
+           "theme": "ROI",
+           "creative_id": "CR001"
+          },
+          "variant": {
+           "label": "Webinar",
+           "description": "Webinar offer, ROI theme, same creative",
+           "objective": "Webinar",
+           "cta": "Register",
+           "theme": "ROI",
+           "creative_id": "CR001"
+          },
+          "primary_metric": "pipeline per $",
+          "daily_budget_per_arm": 250,
+          "runtime_days": 28,
+          "decision_rule": "Read on day 42 after attribution settles. If Webinar is at least 25% higher on pipeline per $ than Demo, shift Google budget toward Webinar and repeat the split on Meta before any wider move; if within 25% either way, hold the mix and extend the read; if Demo is at least 25% higher, keep Demo.",
+          "guardrail_metrics": [
+           "cost per lead",
+           "click-through rate",
+           "qualified lead rate"
+          ],
+          "evidence_ids": [
+           "SIG.01",
+           "SEG.platform_objective",
+           "MIX.objective"
+          ],
+          "requires_human_approval": true,
+          "status": "DRAFT"
+         }
+        },
+        {
+         "rank": 2,
+         "signal_id": "SIG.06",
+         "rationale": {
+          "text": "LinkedIn holds a large share of spend but returns far less than comparable campaigns, so its offer mix matters. The E003 Webinar win is directional only, and settled LinkedIn data shows Webinar at 0.60x Content Download, so the team needs a clean read.",
+          "evidence_ids": [
+           "EXP.E003",
+           "SEG.platform_objective"
+          ]
+         },
+         "expected_learning": "It shows which LinkedIn offer deserves the remaining LinkedIn budget. It also shows whether the E003 win holds on an outcome metric.",
+         "proposal": {
+          "proposal_id": "P3",
+          "title": "LinkedIn Webinar vs Content Download (confirmation of E003)",
+          "hypothesis": "E003 logged Webinar as a win on LinkedIn but settled campaigns disagree; re-test on an outcome metric.",
+          "platform": "LinkedIn",
+          "audience": "Law Firm - Enterprise",
+          "region": "US",
+          "control": {
+           "label": "Content Download",
+           "description": "Content Download offer, ROI theme",
+           "objective": "Content Download",
+           "cta": "Download Guide",
+           "theme": "ROI",
+           "creative_id": "CR001"
+          },
+          "variant": {
+           "label": "Webinar",
+           "description": "Webinar offer, ROI theme",
+           "objective": "Webinar",
+           "cta": "Register",
+           "theme": "ROI",
+           "creative_id": "CR001"
+          },
+          "primary_metric": "pipeline per $",
+          "daily_budget_per_arm": 1000,
+          "runtime_days": 28,
+          "decision_rule": "Read on day 42 after attribution settles. If Webinar is at least 25% higher on pipeline per $, favor Webinar on LinkedIn; if within 25%, hold the LinkedIn mix; if Content Download is at least 25% higher, favor Content Download. Treat the read as provisional if either arm has fewer than 30 opportunities, and use qualified lead rate as the tiebreaker.",
+          "guardrail_metrics": [
+           "cost per lead",
+           "click-through rate",
+           "qualified lead rate"
+          ],
+          "evidence_ids": [
+           "EXP.E003",
+           "SEG.platform_objective"
+          ],
+          "retest_of": "E003",
+          "requires_human_approval": true,
+          "status": "DRAFT"
+         }
+        },
+        {
+         "rank": 3,
+         "signal_id": "SIG.11",
+         "rationale": {
+          "text": "E009 logged Customer Proof as a trusted win on Meta, but settled Meta campaigns show it at 0.81x AI Productivity. The team needs to know which message keeps its budget.",
+          "evidence_ids": [
+           "EXP.E009",
+           "SEG.theme"
+          ]
+         },
+         "expected_learning": "It settles whether Customer Proof earns budget on Meta or only looked good in one test. It also shows which logged learnings the team can plan around.",
+         "proposal": {
+          "proposal_id": "P2",
+          "title": "Customer Proof vs AI Productivity on Meta Webinar (re-test of E009)",
+          "hypothesis": "E009 logged Customer Proof as a win, but settled Meta campaigns point the other way; a clean re-test settles which message keeps its budget.",
+          "platform": "Meta",
+          "audience": "Law Firm - Enterprise",
+          "region": "US",
+          "control": {
+           "label": "AI Productivity",
+           "description": "Webinar offer, AI Productivity theme",
+           "objective": "Webinar",
+           "cta": "Register",
+           "theme": "AI Productivity",
+           "creative_id": "CR007"
+          },
+          "variant": {
+           "label": "Customer Proof",
+           "description": "Webinar offer, Customer Proof theme",
+           "objective": "Webinar",
+           "cta": "Register",
+           "theme": "Customer Proof",
+           "creative_id": "CR013"
+          },
+          "primary_metric": "pipeline per $",
+          "daily_budget_per_arm": 250,
+          "runtime_days": 28,
+          "decision_rule": "Read on day 42 after attribution settles. If Customer Proof is at least 15% higher on pipeline per $, keep it in the mix; if within 15% either way, stop scaling it and hold spend flat; if it is at least 15% lower, cut Customer Proof spend on Meta.",
+          "guardrail_metrics": [
+           "cost per lead",
+           "click-through rate",
+           "qualified lead rate"
+          ],
+          "evidence_ids": [
+           "EXP.E009",
+           "SEG.theme"
+          ],
+          "retest_of": "E009",
+          "requires_human_approval": true,
+          "status": "DRAFT"
+         }
+        }
+       ],
+       "creative_recommendations": [
+        {
+         "text": "Lead Law Firm - Enterprise work with the ROI message. In settled campaigns the ROI Static Law Firm creative is the best performer against comparable campaigns at 1.45x, and ROI for Law Firm - Enterprise is among the strongest pairings at 1.52x.",
+         "evidence_ids": [
+          "CREATIVE.performance",
+          "THEME.by_audience"
+         ]
+        },
+        {
+         "text": "Do not add creative spend behind Customer Proof for Mid-Market audiences until experiment 3 reads. Customer Proof for In-House - Mid-Market is among the weakest pairings at 0.64x, and the Customer Proof Static In-House creative is the weakest creative at 0.40x.",
+         "evidence_ids": [
+          "THEME.by_audience",
+          "CREATIVE.performance"
+         ]
+        },
+        {
+         "text": "Plan creative refresh by platform. Meta CTR holds for 6 weeks and is at 79% of launch level by week 9. LinkedIn holds for 7 weeks and is at 71% by week 10. Google shows no decay with age.",
+         "evidence_ids": [
+          "FATIGUE.curve"
+         ]
+        },
+        {
+         "text": "CR021 (Workflow Automation, Video, Law Firm) has never run. Keep it ready as the fresh Video option for Law Firm audiences when the next launches are planned.",
+         "evidence_ids": [
+          "CREATIVE.gaps"
+         ]
+        },
+        {
+         "text": "Security exists only in Static, with no Carousel or Video for either audience. Hold off on new Security formats until Security has a properly powered read.",
+         "evidence_ids": [
+          "CREATIVE.gaps",
+          "SEG.theme"
+         ]
+        }
+       ],
+       "risks_and_observations": [
+        {
+         "text": "Three strong signals get no test this week: a LinkedIn holdout, a Meta and LinkedIn creative rotation, and the Security read. The LinkedIn holdout matters because 24 of 41 settled LinkedIn campaigns produced no opportunities on $385,683 of spend, and last-touch attribution can hide influence on enterprise deals. Do not cut LinkedIn on this data alone.",
+         "evidence_ids": [
+          "ZERO.opportunities",
+          "FATIGUE.curve",
+          "SEG.theme"
+         ]
+        },
+        {
+         "text": "Meta has $190,139 of spend behind creative past the point where CTR starts to fall. That is about 17% of Meta spend. It is untested this week, so treat it as a fast follow-up.",
+         "evidence_ids": [
+          "FATIGUE.curve"
+         ]
+        },
+        {
+         "text": "The LinkedIn test in experiment 2 may read noisily because opportunity counts per arm will be low. The decision rule falls back on qualified lead rate if counts stay thin.",
+         "evidence_ids": [
+          "EXP.E003",
+          "SEG.platform_objective"
+         ]
+        },
+        {
+         "text": "Last week's qualified leads, opportunities and pipeline are provisional, and 14 campaigns carry the immature flag. They are excluded from every benchmark used here.",
+         "evidence_ids": [
+          "DQ.attribution_lag"
+         ]
+        },
+        {
+         "text": "Only 6 campaigns were live on Jun 30 and none are scheduled past it. The three tests need new campaigns approved and launched, and they cannot read before day 42.",
+         "evidence_ids": [
+          "WEEK.program_status"
+         ]
+        }
+       ]
+      }
+     },
+     "name": "submit_brief",
+     "type": "tool_use",
+     "toolset_name": null
+    }
+   ],
+   "stop_reason": "tool_use",
+   "usage": {
+    "input_tokens": 2,
+    "output_tokens": 4389,
+    "cache_creation_input_tokens": 6873,
+    "cache_read_input_tokens": 39321
+   }
+  },
+  {
+   "blocks": [
+    {
+     "id": "toolu_017VWTa4oHzfW2VANUegRS2Q",
+     "caller": {
+      "type": "direct"
+     },
+     "input": {
+      "brief": {
+       "headline": {
+        "text": "Google budget moved from Webinar to Demo, and Demo now takes 92% of Google spend. In settled campaigns Google Demo returns $612 of pipeline per dollar against $1,953 for Webinar, so the team needs a clean head-to-head before spending more on Demo.",
+        "evidence_ids": [
+         "MIX.objective",
+         "SEG.platform_objective"
+        ]
+       },
+       "what_happened": [
+        {
+         "text": "Nine campaigns spent $17,013 in the week of Jun 24 to Jun 30, down 53% from $36,140 the week before. They produced 86 conversions, down 67%.",
+         "evidence_ids": [
+          "WEEK.totals"
+         ]
+        },
+        {
+         "text": "Almost all of the spend drop came from campaigns that ended or wound down, not from changes inside live campaigns. The 6 campaigns live both weeks held spend within 1%, while CTR slipped from 2.18% to 1.97%.",
+         "evidence_ids": [
+          "WEEK.spend_bridge",
+          "WEEK.same_store"
+         ]
+        },
+        {
+         "text": "The program is winding down: 6 campaigns were live on Jun 30 and none are scheduled past it. Weekly spend is down 91% from the March peak.",
+         "evidence_ids": [
+          "WEEK.program_status"
+         ]
+        },
+        {
+         "text": "Lead capture is current, but qualified leads, opportunities and pipeline for this week are provisional. Qualified leads in the window are only 27% of what conversions would normally produce, so this week gives no read on outcomes.",
+         "evidence_ids": [
+          "DQ.attribution_lag"
+         ]
+        }
+       ],
+       "why": [
+        {
+         "text": "The offer mix on Google flipped. Webinar fell from 55% to 5% of Google spend and Demo rose from 42% to 92% over the last 8 weeks versus earlier.",
+         "evidence_ids": [
+          "MIX.objective"
+         ]
+        },
+        {
+         "text": "In settled campaigns, Google Webinar returns $1,953 of pipeline per dollar and Google Demo returns $612. That is observational, so it tells us where to test, not what causes the gap.",
+         "evidence_ids": [
+          "SEG.platform_objective"
+         ]
+        },
+        {
+         "text": "The one logged test favoring Demo on Google, E013, is not a valid read. It ran 5 days against a 14-day minimum on a sample of 31, and it used a proxy metric. It should not back the shift.",
+         "evidence_ids": [
+          "EXP.E013"
+         ]
+        },
+        {
+         "text": "Across platforms, Demo returns 0.46x the pipeline of comparable campaigns while taking 49% of settled spend. Webinar returns 1.42x on 41%.",
+         "evidence_ids": [
+          "SEG.objective"
+         ]
+        },
+        {
+         "text": "LinkedIn is the weakest platform in settled campaigns. It costs $3,555 per opportunity, against $71 on Google and $164 on Meta.",
+         "evidence_ids": [
+          "FUNNEL.platform"
+         ]
+        }
+       ],
+       "experiments": [
+        {
+         "rank": 1,
+         "signal_id": "SIG.01",
+         "rationale": {
+          "text": "Google moved most of its budget to Demo while settled Google Webinar returns $1,953 of pipeline per dollar against $612 for Demo. No valid test supports the move, so this is the largest decision the team is making now.",
+          "evidence_ids": [
+           "SEG.platform_objective",
+           "MIX.objective",
+           "EXP.E013"
+          ]
+         },
+         "expected_learning": "Whichever way it lands, it tells the team whether to rebuild Google Webinar spend or keep Demo. It also says whether the split is worth repeating on Meta and LinkedIn.",
+         "proposal": {
+          "proposal_id": "P1",
+          "title": "Google Webinar vs Demo head-to-head",
+          "hypothesis": "In settled campaigns Google Webinar returns more pipeline per dollar than Google Demo; a randomized split will show whether the offer drives it.",
+          "platform": "Google",
+          "audience": "Law Firm - Enterprise",
+          "region": "US",
+          "control": {
+           "label": "Demo (current mix)",
+           "description": "Demo offer, ROI theme, Law Firm creative",
+           "objective": "Demo",
+           "cta": "Book Demo",
+           "theme": "ROI",
+           "creative_id": "CR001"
+          },
+          "variant": {
+           "label": "Webinar",
+           "description": "Webinar offer, ROI theme, same creative",
+           "objective": "Webinar",
+           "cta": "Register",
+           "theme": "ROI",
+           "creative_id": "CR001"
+          },
+          "primary_metric": "pipeline per $",
+          "daily_budget_per_arm": 250,
+          "runtime_days": 28,
+          "decision_rule": "Read on day 42 after attribution settles. If Webinar is at least 25% higher on pipeline per $ than Demo, shift Google budget toward Webinar and repeat the split on Meta before any wider move; if within 25% either way, hold the mix and extend the read; if Demo is at least 25% higher, keep Demo.",
+          "guardrail_metrics": [
+           "cost per lead",
+           "click-through rate",
+           "qualified lead rate"
+          ],
+          "evidence_ids": [
+           "SIG.01",
+           "SEG.platform_objective",
+           "MIX.objective"
+          ],
+          "requires_human_approval": true,
+          "status": "DRAFT"
+         }
+        },
+        {
+         "rank": 2,
+         "signal_id": "SIG.06",
+         "rationale": {
+          "text": "LinkedIn holds a large share of spend but returns far less than comparable campaigns, so its offer mix matters. The E003 Webinar win is directional only, and settled LinkedIn data shows Webinar at 0.60x Content Download, so the team needs a clean read.",
+          "evidence_ids": [
+           "EXP.E003",
+           "SEG.platform_objective"
+          ]
+         },
+         "expected_learning": "It shows which LinkedIn offer deserves the remaining LinkedIn budget. It also shows whether the E003 win holds on an outcome metric.",
+         "proposal": {
+          "proposal_id": "P3",
+          "title": "LinkedIn Webinar vs Content Download (confirmation of E003)",
+          "hypothesis": "E003 logged Webinar as a win on LinkedIn but settled campaigns disagree; re-test on an outcome metric.",
+          "platform": "LinkedIn",
+          "audience": "Law Firm - Enterprise",
+          "region": "US",
+          "control": {
+           "label": "Content Download",
+           "description": "Content Download offer, ROI theme",
+           "objective": "Content Download",
+           "cta": "Download Guide",
+           "theme": "ROI",
+           "creative_id": "CR001"
+          },
+          "variant": {
+           "label": "Webinar",
+           "description": "Webinar offer, ROI theme",
+           "objective": "Webinar",
+           "cta": "Register",
+           "theme": "ROI",
+           "creative_id": "CR001"
+          },
+          "primary_metric": "pipeline per $",
+          "daily_budget_per_arm": 1000,
+          "runtime_days": 28,
+          "decision_rule": "Read on day 42 after attribution settles. If Webinar is at least 25% higher on pipeline per $, favor Webinar on LinkedIn; if within 25%, hold the LinkedIn mix; if Content Download is at least 25% higher, favor Content Download. Treat the read as provisional if either arm has fewer than 30 opportunities, and use qualified lead rate as the tiebreaker.",
+          "guardrail_metrics": [
+           "cost per lead",
+           "click-through rate",
+           "qualified lead rate"
+          ],
+          "evidence_ids": [
+           "EXP.E003",
+           "SEG.platform_objective"
+          ],
+          "retest_of": "E003",
+          "requires_human_approval": true,
+          "status": "DRAFT"
+         }
+        },
+        {
+         "rank": 3,
+         "signal_id": "SIG.11",
+         "rationale": {
+          "text": "E009 logged Customer Proof as a trusted win on Meta, but settled Meta campaigns show it at 0.81x AI Productivity. The team needs to know which message keeps its budget.",
+          "evidence_ids": [
+           "EXP.E009",
+           "SEG.theme"
+          ]
+         },
+         "expected_learning": "It settles whether Customer Proof earns budget on Meta or only looked good in one test. It also shows which logged learnings the team can plan around.",
+         "proposal": {
+          "proposal_id": "P2",
+          "title": "Customer Proof vs AI Productivity on Meta Webinar (re-test of E009)",
+          "hypothesis": "E009 logged Customer Proof as a win, but settled Meta campaigns point the other way; a clean re-test settles which message keeps its budget.",
+          "platform": "Meta",
+          "audience": "Law Firm - Enterprise",
+          "region": "US",
+          "control": {
+           "label": "AI Productivity",
+           "description": "Webinar offer, AI Productivity theme",
+           "objective": "Webinar",
+           "cta": "Register",
+           "theme": "AI Productivity",
+           "creative_id": "CR007"
+          },
+          "variant": {
+           "label": "Customer Proof",
+           "description": "Webinar offer, Customer Proof theme",
+           "objective": "Webinar",
+           "cta": "Register",
+           "theme": "Customer Proof",
+           "creative_id": "CR013"
+          },
+          "primary_metric": "pipeline per $",
+          "daily_budget_per_arm": 250,
+          "runtime_days": 28,
+          "decision_rule": "Read on day 42 after attribution settles. If Customer Proof is at least 15% higher on pipeline per $, keep it in the mix; if within 15% either way, stop scaling it and hold spend flat; if it is at least 15% lower, cut Customer Proof spend on Meta.",
+          "guardrail_metrics": [
+           "cost per lead",
+           "click-through rate",
+           "qualified lead rate"
+          ],
+          "evidence_ids": [
+           "EXP.E009",
+           "SEG.theme"
+          ],
+          "retest_of": "E009",
+          "requires_human_approval": true,
+          "status": "DRAFT"
+         }
+        }
+       ],
+       "creative_recommendations": [
+        {
+         "text": "Lead Law Firm - Enterprise work with the ROI message. In settled campaigns the ROI Static Law Firm creative is the best performer against comparable campaigns at 1.45x, and ROI for Law Firm - Enterprise is among the strongest pairings at 1.52x.",
+         "evidence_ids": [
+          "CREATIVE.performance",
+          "THEME.by_audience"
+         ]
+        },
+        {
+         "text": "Do not add creative spend behind Customer Proof for Mid-Market audiences until experiment 3 reads. Customer Proof for In-House - Mid-Market is among the weakest pairings at 0.64x, and the Customer Proof Static In-House creative is the weakest creative at 0.40x.",
+         "evidence_ids": [
+          "THEME.by_audience",
+          "CREATIVE.performance"
+         ]
+        },
+        {
+         "text": "Plan creative refresh by platform. Meta CTR holds for 6 weeks and is at 79% of launch level by week 9. LinkedIn holds for 7 weeks and is at 71% by week 10. Google shows no decay with age.",
+         "evidence_ids": [
+          "FATIGUE.curve"
+         ]
+        },
+        {
+         "text": "CR021 (Workflow Automation, Video, Law Firm) has never run. Keep it ready as the fresh Video option for Law Firm audiences when the next launches are planned.",
+         "evidence_ids": [
+          "CREATIVE.gaps"
+         ]
+        },
+        {
+         "text": "Security exists only in Static, with no Carousel or Video for either audience. Hold off on new Security formats until Security has a properly powered read.",
+         "evidence_ids": [
+          "CREATIVE.gaps",
+          "SEG.theme"
+         ]
+        }
+       ],
+       "risks_and_observations": [
+        {
+         "text": "Three strong signals get no test this week: a LinkedIn holdout, a Meta and LinkedIn creative rotation, and the Security read. The LinkedIn holdout matters because 24 of 41 settled LinkedIn campaigns produced no opportunities on $385,683 of spend, and last-touch attribution can hide influence on enterprise deals. Do not cut LinkedIn on this data alone.",
+         "evidence_ids": [
+          "ZERO.opportunities",
+          "FATIGUE.curve",
+          "SEG.theme"
+         ]
+        },
+        {
+         "text": "Meta has $190,139 of spend behind creative past the point where CTR starts to fall. That is about 17% of Meta spend. It is untested this week, so treat it as a fast follow-up.",
+         "evidence_ids": [
+          "FATIGUE.curve"
+         ]
+        },
+        {
+         "text": "The LinkedIn test in experiment 2 may read noisily because opportunity counts per arm will be low. The decision rule falls back on qualified lead rate if counts stay thin.",
+         "evidence_ids": [
+          "EXP.E003",
+          "SEG.platform_objective"
+         ]
+        },
+        {
+         "text": "Last week's qualified leads, opportunities and pipeline are provisional, and 14 campaigns carry the immature flag. They are excluded from every benchmark used here.",
+         "evidence_ids": [
+          "DQ.attribution_lag"
+         ]
+        },
+        {
+         "text": "Only 6 campaigns were live on Jun 30 and none are scheduled past it. The three tests need new campaigns approved and launched, and none can read until attribution settles.",
+         "evidence_ids": [
+          "WEEK.program_status"
+         ]
+        }
+       ]
+      }
+     },
+     "name": "submit_brief",
+     "type": "tool_use",
+     "toolset_name": null
+    }
+   ],
+   "stop_reason": "tool_use",
+   "usage": {
+    "input_tokens": 2,
+    "output_tokens": 4413,
+    "cache_creation_input_tokens": 4485,
+    "cache_read_input_tokens": 46194
    }
   }
  ]
