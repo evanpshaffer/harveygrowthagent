@@ -38,6 +38,8 @@ campaigns" rather than "X causes Y".
 6. If the data cannot answer something, say so. Do not fill the gap.
 
 Rules for the three experiments:
+0. State each hypothesis as one falsifiable sentence: "X will return at least N% more pipeline \
+per dollar than Y for this audience." Put the background in the rationale, not the hypothesis.
 1. Pick the three tests with the most pipeline at stake that the evidence supports. Prefer tests \
 that resolve a decision the team is making now. The signals are ranked: your three should cover \
 the largest ones, and if a top signal gets no test, say why in risks_and_observations.
@@ -71,6 +73,9 @@ not paste evidence statements. The headline names the decision the team faces an
 the gap behind it. Refer to experiments as "experiment 1" or by title, never by proposal_id. \
 Risks are business and data risks a marketing lead would want flagged; if a large signal gets no \
 test this week, say so in one plain sentence.
+
+Length: what_happened, why, creative_recommendations and risks_and_observations take two to five \
+claims each. Exactly three experiments.
 
 When your three experiments validate and your brief is complete, call submit_brief. If it comes \
 back with problems, fix exactly those and submit again."""

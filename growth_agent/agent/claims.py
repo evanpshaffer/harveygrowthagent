@@ -70,6 +70,8 @@ def context_numbers(cfg: Config, windows: dict) -> set[float]:
             cfg.week_days, windows["immature_days"], cfg.min_runtime_days, cfg.min_sample_size,
             cfg.min_planned_runtime_days, cfg.max_daily_budget, cfg.max_total_test_budget,
             cfg.min_expected_opportunities, cfg.recent_weeks, cfg.baseline_days,
+            cfg.min_planned_runtime_days + cfg.lead_maturity_days,   # the earliest valid read day
+            cfg.max_slate_budget, cfg.max_submit_attempts,
         )
     }
 
