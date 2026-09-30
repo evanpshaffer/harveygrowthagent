@@ -11,7 +11,9 @@ def _claim(c: Claim) -> str:
 
 
 def _arm(arm) -> str:
-    bits = [b for b in (arm.objective, arm.theme, arm.cta, arm.creative_id, arm.targeting) if b]
+    """The arm's description, plus any setting the description does not already mention."""
+    said = arm.description.lower()
+    bits = [b for b in (arm.objective, arm.theme, arm.cta, arm.creative_id, arm.targeting) if b and b.lower() not in said]
     return f"{arm.description} ({', '.join(bits)})" if bits else arm.description
 
 
@@ -110,7 +112,9 @@ def render_brief(run: AgentRun, result: Result) -> str:
         add("- Held back: nothing. No claim or experiment was removed.")
     if run.mode == "live":
         cost = "n/a" if run.cost_usd is None else f"${run.cost_usd:.2f}"
-        add(f"- Cost of this run: {run.usage['input_tokens']:,} input and {run.usage['output_tokens']:,} output tokens, {cost}, {run.seconds:.0f} seconds.")
+        u = run.usage
+        add(f"- Cost of this run: {cost} and {run.seconds:.0f} seconds. {u['input_tokens'] + u['cache_creation_input_tokens']:,} input tokens billed in full, "
+            f"{u['cache_read_input_tokens']:,} read from cache, {u['output_tokens']:,} output.")
     else:
         add("- This is a replay of a recorded run, used for offline demos and tests. Run with an API key for a live brief.")
     add("\n### Agent steps\n")

@@ -31,7 +31,7 @@ python -m growth_agent.brief          # the full agent: writes out/brief.md and 
 python -m growth_agent.brief --replay examples/recorded_run.json   # same pipeline, no key, no cost
 
 python -m growth_agent.run            # analysis only: out/evidence_pack.json and out/analysis_report.md
-python -m pytest -q                   # 93 tests and evals
+python -m pytest -q                   # 97 tests and evals
 python -m growth_agent.run --validate examples/proposal_unsafe.json   # watch the guardrails block it
 python mcp_server.py                  # expose everything as MCP tools
 ```
@@ -114,9 +114,33 @@ spend. A run looks like this:
    failing is removed from the brief and listed under "held back". Nothing
    unverified ships.
 
-Every run reports its turns, tokens and cost at the bottom of the brief.
-`examples/recorded_run.json` is a scripted recording used for tests and
-offline demos. It is not a live run; `--record` replaces it with one.
+Every run reports its turns, tokens and cost at the bottom of the brief. The
+first live run cost $0.48 (162,155 input and 15,958 output tokens, 97
+seconds). Because a tool loop resends its whole conversation each turn, the
+agent now uses prompt caching so the unchanged part is billed at the cache
+rate.
+
+`--record` saves a live run's model turns to `examples/recorded_run.json`, and
+`--replay` runs the same pipeline from that file with no key and no cost.
+
+### What the checks do not catch
+
+The claim checker verifies numbers, not reasoning. A sentence with no numbers,
+or a wrong conclusion drawn from right numbers, passes it. In the first live
+run the model wrote that LinkedIn could not be tested affordably, when only
+LinkedIn Demo could not. That was fixed at the source: the guardrail now says
+which offers can be tested on a platform when it blocks one. The remaining
+protection for qualitative claims is the evidence id on every line and the
+human reviewer, which is why approval is required and not optional.
+
+### What changed after the first live run
+
+| Seen in the live brief | Fix |
+|---|---|
+| Two of three experiments tested the same comparison | Review rejects a repeated comparison: three slots, three decisions |
+| Decision rules said "beats" and "exceeds noise" | Guardrail requires a read day and a numeric threshold |
+| Model gave up on LinkedIn after one blocked design | Sample-size block now lists the offers that can be tested |
+| 162K input tokens for five turns | Prompt caching |
 
 ## Imperfect data: what the agent found and does about it
 
@@ -143,7 +167,7 @@ A proposed experiment is blocked unless all of these hold:
 | Control and variant differ on exactly one thing | A result must have one cause. |
 | Daily and total budget are under the ceilings | Never more exposure than the team already takes. |
 | Runtime is at least 28 days and expected sample clears the minimum | No more false winners. |
-| A decision rule is written in advance | No deciding after the results are in. |
+| A decision rule names the read day and a numeric threshold | No deciding after the results are in. |
 | Evidence ids exist, are settled, and are not rejected experiments | No claims built on noise. |
 | The question is not already answered by a trusted test | No wasted budget. |
 | The variant does not repeat a known loser | No relearning old lessons. |
@@ -193,7 +217,7 @@ growth_agent/
   report.py            deterministic readout of the evidence pack
   run.py               command line
 mcp_server.py          MCP tools
-tests/                 93 tests and evals
+tests/                 97 tests and evals
 examples/              sound and unsafe proposals, a recorded agent run
 data/sample/           the four take-home CSVs
 out/                   generated evidence pack, report and brief

@@ -60,7 +60,7 @@ def main() -> None:
                 "  or run:  export ANTHROPIC_API_KEY=sk-ant-...\n"
                 "  To run without a key:  python -m growth_agent.brief --replay examples/recorded_run.json"
             )
-        client = LiveClient(args.model, record_to=args.record)
+        client = LiveClient(args.model, record_to=args.record, cache=CONFIG.use_prompt_caching)
         print(f"2/3 Reasoning layer: {args.model} is reading evidence and designing experiments")
 
     try:
@@ -81,7 +81,9 @@ def main() -> None:
     (out / "brief.md").write_text(render_brief(run, result))
     print(f"    {len(run.brief.experiments)} experiments ready for human review, {len(run.held_back)} item(s) held back")
     if run.mode == "live" and run.cost_usd is not None:
-        print(f"    {run.usage['input_tokens']:,} input + {run.usage['output_tokens']:,} output tokens, ${run.cost_usd:.2f}, {run.seconds:.0f}s")
+        u = run.usage
+        print(f"    {u['input_tokens'] + u['cache_creation_input_tokens']:,} input tokens billed in full, {u['cache_read_input_tokens']:,} read from cache, "
+              f"{u['output_tokens']:,} output, ${run.cost_usd:.2f}, {run.seconds:.0f}s")
     print(f"Wrote {out / 'brief.md'} and {out / 'brief.json'}")
     print("Nothing was launched. The experiments are drafts awaiting approval.")
 

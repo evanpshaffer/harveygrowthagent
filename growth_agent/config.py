@@ -98,16 +98,22 @@ class Config:
     max_agent_turns: int = 12
     max_submit_attempts: int = 3
     max_output_tokens: int = 16_000
-    # USD per million tokens (input, output). Source: Claude model overview
-    # docs, checked 2026-09-30. Used only to report what a run cost.
-    model_prices: dict[str, tuple[float, float]] = field(
+    # USD per million tokens (input, output) and the cache-read multiplier.
+    # Source: Claude model overview and prompt caching docs, checked 2026-09-30.
+    # Used only to report what a run cost.
+    model_prices: dict[str, tuple[float, float, float]] = field(
         default_factory=lambda: {
-            "claude-fable-5-1": (10.0, 50.0),
-            "claude-opus-5-5": (4.0, 20.0),
-            "claude-sonnet-5-5": (2.0, 10.0),
-            "claude-haiku-4-5-20251001": (1.0, 5.0),
+            "claude-fable-5-1": (10.0, 50.0, 0.025),
+            "claude-opus-5-5": (4.0, 20.0, 0.05),
+            "claude-sonnet-5-5": (2.0, 10.0, 0.1),
+            "claude-haiku-4-5-20251001": (1.0, 5.0, 0.1),
         }
     )
+    # A 5-minute cache write costs this multiple of the input price.
+    cache_write_multiplier: float = 1.25
+    # The agent resends its whole conversation every turn. Caching the part
+    # that has not changed is the main cost lever for a tool-using loop.
+    use_prompt_caching: bool = True
     # Words that signal an assurance the agent has no evidence for. A creative
     # recommendation containing one is sent back, because legal buyers read
     # compliance and customer claims literally.

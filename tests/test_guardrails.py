@@ -74,6 +74,19 @@ def test_an_underpowered_test_is_blocked_with_the_budget_it_would_need(result, g
     assert any("per day" in b["message"] for b in v["blocks"])
 
 
+def test_a_sample_size_block_says_what_can_be_tested_instead(result, good_proposal):
+    good_proposal.update({"platform": "LinkedIn", "daily_budget_per_arm": 1000})
+    v = validate(good_proposal, result)
+    assert v["computed"]["offers_testable_on_platform"] == ["Content Download", "Webinar"]   # Demo is the arm that cannot be powered
+    assert any("Content Download, Webinar" in b["message"] for b in v["blocks"])
+
+
+@pytest.mark.parametrize("rule", ["Ship it if the variant beats control.", "Read on day 42 and pick the winner."])
+def test_a_vague_decision_rule_is_blocked(result, good_proposal, rule):
+    good_proposal["decision_rule"] = rule
+    assert "decision_rule" in rules(validate(good_proposal, result))
+
+
 def test_changing_two_things_at_once_is_blocked(result, good_proposal):
     good_proposal["variant"].update({"theme": "Speed", "creative_id": "CR027"})
     assert "one_variable" in rules(validate(good_proposal, result))

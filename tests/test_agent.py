@@ -10,7 +10,8 @@ from growth_agent.agent.loop import AgentError, ReplayClient, review, run_agent
 from growth_agent.agent.prompt import TOOLS, build_context
 from growth_agent.agent.render import render_brief
 
-FIXTURE = Path(__file__).resolve().parents[1] / "examples" / "recorded_run.json"
+# A scripted run kept with the tests, so they do not depend on whatever the last live run produced.
+FIXTURE = Path(__file__).resolve().parents[0] / "fixtures" / "scripted_run.json"
 
 
 class ScriptedClient:
@@ -98,6 +99,15 @@ def test_a_blocked_experiment_blocks_the_brief(result, good_brief):
     assert any("outcome_metric" in p["message"] for p in rev.problems if p["where"] == "experiments[0]")
 
 
+def test_the_same_comparison_cannot_take_two_of_the_three_slots(result, good_brief):
+    clone = copy.deepcopy(good_brief["experiments"][0])
+    clone.update(rank=2)
+    clone["proposal"].update(proposal_id="DUP", platform="Meta")
+    good_brief["experiments"][1] = clone
+    rev = review(good_brief, result)
+    assert any("same comparison" in p["message"] for p in rev.problems if p["where"] == "experiments[1]")
+
+
 def test_a_brief_with_two_experiments_is_rejected(result, good_brief):
     good_brief["experiments"].pop()
     assert not review(good_brief, result).accepted
@@ -113,7 +123,7 @@ def test_garbage_is_rejected_not_crashed(result):
 def test_the_recorded_run_replays_end_to_end(result):
     run = run_agent(result, ReplayClient(str(FIXTURE)))
     assert len(run.brief.experiments) == 3 and run.held_back == []
-    assert any("blocked: sample_size" in t["event"] for t in run.trace)   # the guardrails redirected a design mid-run
+    assert any("blocked" in t["event"] and "sample_size" in t["event"] for t in run.trace)   # the guardrails redirected a design mid-run
     text = render_brief(run, result)
     assert "Nothing in this brief has been launched" in text and "Not a live model run" in text
 
@@ -148,7 +158,7 @@ def test_a_model_that_never_submits_is_stopped(result):
 
 def test_usage_is_counted_so_cost_per_run_is_known(result, good_brief):
     run = run_agent(result, ScriptedClient([submit(good_brief)]))
-    assert run.usage == {"input_tokens": 100, "output_tokens": 50}
+    assert run.usage["input_tokens"] == 100 and run.usage["output_tokens"] == 50
 
 
 # ---- what the model is given ---------------------------------------------------------------

@@ -120,6 +120,7 @@ def review(payload: Any, result: Result) -> Review:
         check(f"risks_and_observations[{i}]", c)
 
     verdicts = []
+    seen: dict[tuple, int] = {}
     if sorted(e.rank for e in brief.experiments) != [1, 2, 3]:
         problems.append({"where": "experiments", "message": "ranks must be exactly 1, 2 and 3."})
     if len({e.proposal.proposal_id for e in brief.experiments}) != len(brief.experiments):
@@ -130,6 +131,19 @@ def review(payload: Any, result: Result) -> Review:
         verdicts.append(verdict)
         for b in verdict["blocks"]:
             problems.append({"where": where, "message": f"guardrail '{b['rule']}': {b['message']}"})
+        # Three slots, three decisions: the same comparison may not be tested twice.
+        for dim in verdict["computed"].get("differs_on", []):
+            pair = tuple(sorted(str(getattr(arm, dim, None) or arm.creative_id) for arm in (e.proposal.control, e.proposal.variant)))
+            key = (dim, pair)
+            if key in seen:
+                problems.append({
+                    "where": where,
+                    "message": f"tests the same comparison as experiments[{seen[key]}] ({dim}: {' vs '.join(pair)}). Use each of the "
+                               "three slots for a different decision. If a result should be repeated on a second platform, say so "
+                               "in the first test's decision rule.",
+                })
+            else:
+                seen[key] = i
         if e.signal_id and not pack.has(e.signal_id):
             problems.append({"where": where, "message": f"signal_id '{e.signal_id}' does not exist."})
         # Numbers that belong to the design itself are allowed in the experiment's own text.
@@ -220,7 +234,7 @@ def run_agent(result: Result, client: ModelClient, on_event: Callable[[str], Non
     cfg = result.config
     say = on_event or (lambda _msg: None)
     messages: list[dict] = [{"role": "user", "content": build_context(result)}]
-    usage = {"input_tokens": 0, "output_tokens": 0}
+    usage = {"input_tokens": 0, "output_tokens": 0, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}
     trace: list[dict] = []
     submits = 0
     final: Review | None = None
@@ -279,7 +293,15 @@ def run_agent(result: Result, client: ModelClient, on_event: Callable[[str], Non
 
     brief, verdicts, held = finalize(final, result) if final.problems else (final.brief, final.verdicts, [])
     price = cfg.model_prices.get(client.model)
-    cost = None if price is None else (usage["input_tokens"] * price[0] + usage["output_tokens"] * price[1]) / 1e6
+    cost = None
+    if price is not None:
+        p_in, p_out, read_mult = price
+        cost = (
+            usage["input_tokens"] * p_in
+            + usage["cache_creation_input_tokens"] * p_in * cfg.cache_write_multiplier
+            + usage["cache_read_input_tokens"] * p_in * read_mult
+            + usage["output_tokens"] * p_out
+        ) / 1e6
     return AgentRun(brief, verdicts, held, submits, turn, trace, usage, cost, client.model, client.mode, time.time() - started)
 
 
@@ -290,18 +312,37 @@ class LiveClient:
 
     mode = "live"
 
-    def __init__(self, model: str, record_to: str | None = None):
+    def __init__(self, model: str, record_to: str | None = None, cache: bool = True):
         import anthropic
 
         self.model = model
         self._client = anthropic.Anthropic()
         self._record_to = record_to
         self._turns: list[dict] = []
+        self._cache = cache
+
+    def _call(self, **kwargs):
+        """Call the API with automatic prompt caching, falling back cleanly if it is not available."""
+        if self._cache:
+            try:
+                return self._client.messages.create(cache_control={"type": "ephemeral"}, **kwargs)
+            except TypeError:
+                self._cache = False   # this SDK version does not know the parameter
+            except Exception as err:
+                if "cache_control" not in str(err):
+                    raise
+                self._cache = False   # the API rejected it for this model or account
+        return self._client.messages.create(**kwargs)
 
     def create(self, **kwargs) -> dict:
-        resp = self._client.messages.create(**kwargs)
+        resp = self._call(**kwargs)
         blocks = [b.model_dump() for b in resp.content]
-        usage = {"input_tokens": resp.usage.input_tokens, "output_tokens": resp.usage.output_tokens}
+        usage = {
+            "input_tokens": resp.usage.input_tokens,
+            "output_tokens": resp.usage.output_tokens,
+            "cache_creation_input_tokens": getattr(resp.usage, "cache_creation_input_tokens", 0) or 0,
+            "cache_read_input_tokens": getattr(resp.usage, "cache_read_input_tokens", 0) or 0,
+        }
         if self._record_to:
             keep = [b for b in blocks if b.get("type") in ("text", "tool_use")]
             self._turns.append({"blocks": keep, "stop_reason": resp.stop_reason, "usage": usage})

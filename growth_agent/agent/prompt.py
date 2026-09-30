@@ -39,15 +39,20 @@ campaigns" rather than "X causes Y".
 
 Rules for the three experiments:
 1. Pick the three tests with the most pipeline at stake that the evidence supports. Prefer tests \
-that resolve a decision the team is making now.
+that resolve a decision the team is making now. The signals are ranked: your three should cover \
+the largest ones, and if a top signal gets no test, say why in risks_and_observations.
+1a. Three slots, three different decisions. Never test the same comparison twice, even on a \
+second platform. If a result should be repeated elsewhere, write that into the decision rule.
 2. Control and variant differ on exactly one thing: the offer (objective), the message (theme), \
 the CTA, the creative, or the targeting. Everything else is identical.
 3. The primary metric is a business outcome. Put click and lead metrics in guardrail_metrics.
-4. Write the decision rule before the test runs: what result leads to what action, and on which \
-day it is read. The read must wait for attribution to settle.
+4. Write the decision rule before the test runs. It must name the day the result is read (after \
+attribution settles) and a numeric threshold, for example "if the variant is at least 25% higher \
+on day 42, do X; if within 25%, do Y; otherwise do Z". "Beats" or "exceeds noise" is not a rule.
 5. Call validate_experiment on every design before you submit. If it is blocked, change the \
-design. If no affordable design can answer the question, choose a different question and say in \
-risks_and_observations what could not be tested and why.
+design. A sample-size block lists the offers that can be tested on that platform: try those \
+before giving up on the platform. Only say something cannot be tested if the validator confirmed \
+it, and then say exactly what was blocked (for example "LinkedIn Demo", not "LinkedIn").
 6. Use creative ids from list_creatives that are made for the audience you are targeting.
 
 Rules for creative recommendations:
@@ -56,7 +61,9 @@ Rules for creative recommendations:
 assurances. Legal buyers read those literally.
 
 Style: write for busy marketers. Short sentences. Specific. No hype, no hedging filler. One or \
-two sentences per claim.
+two sentences per claim. Write in your own words and say what each fact means for the team; do \
+not paste evidence statements. The headline names the decision the team faces and the size of \
+the gap behind it.
 
 When your three experiments validate and your brief is complete, call submit_brief. If it comes \
 back with problems, fix exactly those and submit again."""

@@ -166,10 +166,22 @@ def validate(proposal: dict | ExperimentProposal, result: Result) -> dict:
             computed["arms"][arm.label] = {"expected_spend": spend, "expected_qualified_leads": exp_ql, "expected_opportunities": exp_opp}
             if exp_ql < cfg.min_sample_size:
                 need = cfg.min_sample_size * row["cost_per_ql"] / (pacing * p.runtime_days)
+                # Tell the designer what CAN be tested here, so a block redirects instead of dead-ends.
+                days = max(p.runtime_days, cfg.min_planned_runtime_days)
+                ceiling = min(cfg.max_daily_budget, cfg.max_total_test_budget / (2 * days))
+                testable = sorted(
+                    obj for (plat_name, obj), r in cells.iterrows()
+                    if plat_name == p.platform and ceiling * pacing * days / r["cost_per_ql"] >= cfg.min_sample_size
+                )
+                computed["offers_testable_on_platform"] = testable
+                hint = (
+                    f" Offers on {p.platform} that can reach the minimum within the budget ceiling at {days} days: "
+                    f"{', '.join(testable)}." if testable else f" No offer on {p.platform} can reach the minimum within the budget ceiling."
+                )
                 block(
                     "sample_size",
                     f"{arm.label}: expect about {exp_ql:.0f} qualified leads, under the {cfg.min_sample_size} minimum. "
-                    f"At this runtime it needs roughly ${need:,.0f} per day.",
+                    f"At this runtime it needs roughly ${need:,.0f} per day.{hint}",
                 )
             elif exp_opp < cfg.min_expected_opportunities:
                 warn(
@@ -178,8 +190,14 @@ def validate(proposal: dict | ExperimentProposal, result: Result) -> dict:
                     "consider qualified-lead rate as the decision metric with pipeline as confirmation.",
                 )
     computed["earliest_readout_day"] = p.runtime_days + cfg.lead_maturity_days
-    if not p.decision_rule.strip():
+    rule = p.decision_rule.strip()
+    if not rule:
         block("decision_rule", "A decision rule must be written before launch, not after the results are in.")
+    else:
+        if not re.search(r"\bday\s+\d+", rule, re.I):
+            block("decision_rule", "The decision rule must name the day the result is read (for example 'Read on day 42').")
+        if not re.search(r"\d+(?:\.\d+)?\s?(?:%|x\b)", rule):
+            block("decision_rule", "The decision rule must state a numeric threshold (for example 'at least 25% higher'). 'Beats' is not a rule.")
 
     # R7. Evidence must exist, be valid, and be settled ----------------------------------------
     if not p.evidence_ids:
