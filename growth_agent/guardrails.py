@@ -65,6 +65,8 @@ def _differences(p: ExperimentProposal, creatives: pd.DataFrame) -> list[str]:
     """Which attributes differ between control and variant."""
     lib = creatives.set_index("creative_id")
     diffs = [f for f in ("objective", "theme", "cta", "targeting") if getattr(p.control, f) != getattr(p.variant, f)]
+    if "objective" in diffs and "cta" in diffs:
+        diffs.remove("cta")  # each offer has its own CTAs, so the CTA changing with the offer is one change, not two
     ca, cb = p.control.creative_id, p.variant.creative_id
     if ca != cb and ca in lib.index and cb in lib.index:
         if lib.loc[ca, "format"] != lib.loc[cb, "format"]:
@@ -122,6 +124,10 @@ def validate(proposal: dict | ExperimentProposal, result: Result) -> dict:
             v = getattr(arm, field)
             if v is not None and v not in vocab[field]:
                 block("known_values", f"{arm.label}: {field} '{v}' does not exist in the data.")
+        if arm.objective in vocab["objective"] and arm.cta in vocab["cta"]:
+            fits = sorted(ds.campaigns.loc[ds.campaigns["objective"] == arm.objective, "cta"].unique())
+            if arm.cta not in fits:
+                block("cta", f"{arm.label}: CTA '{arm.cta}' has never run with a {arm.objective} offer. CTAs for {arm.objective}: {', '.join(fits)}.")
         if arm.creative_id is not None:
             if arm.creative_id not in lib.index:
                 block("known_values", f"{arm.label}: creative '{arm.creative_id}' is not in the creative library.")

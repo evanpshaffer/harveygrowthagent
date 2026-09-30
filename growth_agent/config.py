@@ -88,6 +88,10 @@ class Config:
     # Ceiling on the total cost of a single staged test. Assumption: set by
     # the marketing lead; 60k is roughly one large historical campaign.
     max_total_test_budget: float = 60_000.0
+    # Ceiling on the combined budget of the three tests in one brief. Assumption:
+    # about one average week of historical program spend (roughly $123k), so a
+    # month of testing never costs more than a normal week of running.
+    max_slate_budget: float = 120_000.0
     # Statuses an agent-created object is allowed to have. "ACTIVE" is absent
     # on purpose: only a human action outside this codebase can launch.
     allowed_staging_statuses: tuple[str, ...] = ("DRAFT", "PAUSED")

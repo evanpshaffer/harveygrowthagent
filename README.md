@@ -31,7 +31,7 @@ python -m growth_agent.brief          # the full agent: writes out/brief.md and 
 python -m growth_agent.brief --replay examples/recorded_run.json   # same pipeline, no key, no cost
 
 python -m growth_agent.run            # analysis only: out/evidence_pack.json and out/analysis_report.md
-python -m pytest -q                   # 99 tests and evals
+python -m pytest -q                   # 104 tests and evals
 python -m growth_agent.run --validate examples/proposal_unsafe.json   # watch the guardrails block it
 python mcp_server.py                  # expose everything as MCP tools
 ```
@@ -141,6 +141,9 @@ human reviewer, which is why approval is required and not optional.
 | Decision rules said "beats" and "exceeds noise" | Guardrail requires a read day and a numeric threshold |
 | Model gave up on LinkedIn after one blocked design | Sample-size block now lists the offers that can be tested |
 | 162K input tokens for five turns | Prompt caching |
+| A Webinar arm carried a 'Book Demo' button so the arms would differ on one thing | Guardrail: a CTA must belong to its offer, and a CTA that changes with the offer is one change |
+| Three tests sized at the maximum, $168,000 together | Slate ceiling across the three tests, and the prompt asks for the smallest budget that clears the minimum |
+| Risks section referred to experiments as P1 and P3 | Review rejects internal ids in reader-facing text |
 | Second live run crashed: the model sent a proposal as a JSON string with a stray brace | Tool inputs are read tolerantly, and any tool failure goes back to the model instead of ending the run |
 
 ## Imperfect data: what the agent found and does about it
@@ -169,6 +172,8 @@ A proposed experiment is blocked unless all of these hold:
 | Daily and total budget are under the ceilings | Never more exposure than the team already takes. |
 | Runtime is at least 28 days and expected sample clears the minimum | No more false winners. |
 | A decision rule names the read day and a numeric threshold | No deciding after the results are in. |
+| Each arm's CTA belongs to its offer | No Webinar ad with a Book Demo button. |
+| The three tests together fit a slate budget | A month of testing never costs more than a normal week of running. |
 | Evidence ids exist, are settled, and are not rejected experiments | No claims built on noise. |
 | The question is not already answered by a trusted test | No wasted budget. |
 | The variant does not repeat a known loser | No relearning old lessons. |
@@ -218,7 +223,7 @@ growth_agent/
   report.py            deterministic readout of the evidence pack
   run.py               command line
 mcp_server.py          MCP tools
-tests/                 99 tests and evals
+tests/                 104 tests and evals
 examples/              sound and unsafe proposals, a recorded agent run
 data/sample/           the four take-home CSVs
 out/                   generated evidence pack, report and brief

@@ -108,6 +108,29 @@ def test_the_same_comparison_cannot_take_two_of_the_three_slots(result, good_bri
     assert any("same comparison" in p["message"] for p in rev.problems if p["where"] == "experiments[1]")
 
 
+def test_three_tests_together_must_fit_the_slate_budget(result, good_brief):
+    for e in good_brief["experiments"]:
+        e["proposal"]["daily_budget_per_arm"] = 1000
+    rev = review(good_brief, result)
+    assert any("together" in p["message"] for p in rev.problems if p["where"] == "experiments")
+
+
+def test_an_over_budget_slate_is_trimmed_from_the_bottom_if_the_model_cannot_fix_it(result, good_brief):
+    for e in good_brief["experiments"]:
+        e["proposal"].update(daily_budget_per_arm=1000, runtime_days=28)
+    run = run_agent(result, ScriptedClient([submit(good_brief, i) for i in (1, 2, 3)]))
+    total = sum(v["computed"]["total_budget"] for v in run.verdicts)
+    assert total <= result.config.max_slate_budget
+    assert [e.rank for e in run.brief.experiments] == [1, 2] and "ranked 3" in run.held_back[-1]["where"]
+
+
+def test_internal_ids_do_not_reach_the_reader(result, good_brief):
+    pid = good_brief["experiments"][0]["proposal"]["proposal_id"]
+    good_brief["risks_and_observations"][0]["text"] = f"{pid} covers the Google offer question."
+    rev = review(good_brief, result)
+    assert any("internal id" in p["message"] for p in rev.problems if p["where"] == "risks_and_observations[0]")
+
+
 def test_a_brief_with_two_experiments_is_rejected(result, good_brief):
     good_brief["experiments"].pop()
     assert not review(good_brief, result).accepted

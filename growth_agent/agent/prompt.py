@@ -45,7 +45,12 @@ the largest ones, and if a top signal gets no test, say why in risks_and_observa
 second platform. If a result should be repeated elsewhere, write that into the decision rule.
 2. Control and variant differ on exactly one thing: the offer (objective), the message (theme), \
 the CTA, the creative, or the targeting. Everything else is identical.
+2a. Each offer has its own CTAs. Give every arm a CTA that belongs to its offer. When the offer \
+is the thing being tested, the CTA changes with it and that still counts as one change.
 3. The primary metric is a business outcome. Put click and lead metrics in guardrail_metrics.
+3a. Size each test at the smallest budget that comfortably clears the minimum sample (roughly \
+twice the minimum qualified leads per arm is plenty). Do not default to the maximum. The three \
+tests together must stay under the slate ceiling given below.
 4. Write the decision rule before the test runs. It must name the day the result is read (after \
 attribution settles) and a numeric threshold, for example "if the variant is at least 25% higher \
 on day 42, do X; if within 25%, do Y; otherwise do Z". "Beats" or "exceeds noise" is not a rule.
@@ -63,7 +68,9 @@ assurances. Legal buyers read those literally.
 Style: write for busy marketers. Short sentences. Specific. No hype, no hedging filler. One or \
 two sentences per claim. Write in your own words and say what each fact means for the team; do \
 not paste evidence statements. The headline names the decision the team faces and the size of \
-the gap behind it.
+the gap behind it. Refer to experiments as "experiment 1" or by title, never by proposal_id. \
+Risks are business and data risks a marketing lead would want flagged; if a large signal gets no \
+test this week, say so in one plain sentence.
 
 When your three experiments validate and your brief is complete, call submit_brief. If it comes \
 back with problems, fix exactly those and submit again."""
@@ -145,12 +152,15 @@ def build_context(result: Result) -> str:
                 "min_expected_qualified_leads_per_arm": cfg.min_sample_size,
                 "max_daily_budget_per_arm": cfg.max_daily_budget,
                 "max_total_test_budget": cfg.max_total_test_budget,
+                "max_combined_budget_for_the_three_tests": cfg.max_slate_budget,
                 "allowed_status": list(cfg.allowed_staging_statuses),
                 "one_variable_only": True,
             }
         ),
         "\n# Values that exist in the data (use these exactly)",
         json.dumps(vocab),
+        "\n# CTAs that belong to each offer",
+        json.dumps({o: sorted(c.loc[c["objective"] == o, "cta"].unique().tolist()) for o in vocab["objective"]}),
         "\nWrite this week's brief. Fetch the evidence you need, design and validate three experiments, then submit.",
     ]
     return "\n".join(parts)

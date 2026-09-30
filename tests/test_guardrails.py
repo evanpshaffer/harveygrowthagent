@@ -87,6 +87,19 @@ def test_a_vague_decision_rule_is_blocked(result, good_proposal, rule):
     assert "decision_rule" in rules(validate(good_proposal, result))
 
 
+def test_a_cta_must_belong_to_its_offer(result, good_proposal):
+    """Seen in a live run: a Webinar arm carrying a 'Book Demo' button."""
+    good_proposal["control"]["cta"] = good_proposal["variant"]["cta"] = "Book Demo"
+    v = validate(good_proposal, result)
+    assert "cta" in rules(v) and any("Register, Save Your Seat" in b["message"] for b in v["blocks"])
+
+
+def test_a_cta_that_changes_with_the_offer_is_one_change_not_two(result, good_proposal):
+    good_proposal["control"]["cta"], good_proposal["variant"]["cta"] = "Book Demo", "Register"
+    v = validate(good_proposal, result)
+    assert v["verdict"] == "ready_for_human_review" and v["computed"]["differs_on"] == ["objective"]
+
+
 def test_changing_two_things_at_once_is_blocked(result, good_proposal):
     good_proposal["variant"].update({"theme": "Speed", "creative_id": "CR027"})
     assert "one_variable" in rules(validate(good_proposal, result))

@@ -63,14 +63,16 @@
         "description": "Demo offer with the ROI message",
         "objective": "Demo",
         "theme": "ROI",
-        "creative_id": "CR001"
+        "creative_id": "CR001",
+        "cta": "Book Demo"
        },
        "variant": {
         "label": "Variant",
         "description": "Webinar offer with the ROI message",
         "objective": "Webinar",
         "theme": "ROI",
-        "creative_id": "CR001"
+        "creative_id": "CR001",
+        "cta": "Register"
        },
        "primary_metric": "Pipeline per $",
        "guardrail_metrics": [
@@ -78,7 +80,7 @@
         "CTR",
         "Qualified lead rate"
        ],
-       "daily_budget_per_arm": 750,
+       "daily_budget_per_arm": 600,
        "runtime_days": 28,
        "decision_rule": "Read on day 42. If Webinar's pipeline per dollar is at least 25% higher than Demo's, make Webinar the default Google offer for this audience. If the arms are within 25% of each other, keep both and repeat on a second audience. If Demo is at least 25% higher, keep the current mix.",
        "evidence_ids": [
@@ -109,14 +111,16 @@
         "description": "Demo offer with the ROI message",
         "objective": "Demo",
         "theme": "ROI",
-        "creative_id": "CR002"
+        "creative_id": "CR002",
+        "cta": "Book Demo"
        },
        "variant": {
         "label": "Variant",
         "description": "Content download offer with the ROI message",
         "objective": "Content Download",
         "theme": "ROI",
-        "creative_id": "CR002"
+        "creative_id": "CR002",
+        "cta": "Download Guide"
        },
        "primary_metric": "Pipeline per $",
        "guardrail_metrics": [
@@ -153,7 +157,8 @@
         "objective": "Webinar",
         "theme": "ROI",
         "creative_id": "CR002",
-        "targeting": "Current legal-interest audience, as configured today (channel owner to confirm)"
+        "targeting": "Current legal-interest audience, as configured today (channel owner to confirm)",
+        "cta": "Register"
        },
        "variant": {
         "label": "Variant",
@@ -161,7 +166,8 @@
         "objective": "Webinar",
         "theme": "ROI",
         "creative_id": "CR002",
-        "targeting": "Role-targeted: general counsel, legal operations leaders and law firm partners"
+        "targeting": "Role-targeted: general counsel, legal operations leaders and law firm partners",
+        "cta": "Register"
        },
        "primary_metric": "Cost per opportunity",
        "guardrail_metrics": [
@@ -213,14 +219,16 @@
         "description": "Webinar offer with the ROI message",
         "objective": "Webinar",
         "theme": "ROI",
-        "creative_id": "CR002"
+        "creative_id": "CR002",
+        "cta": "Register"
        },
        "variant": {
         "label": "Variant",
         "description": "Content download offer with the ROI message",
         "objective": "Content Download",
         "theme": "ROI",
-        "creative_id": "CR002"
+        "creative_id": "CR002",
+        "cta": "Download Guide"
        },
        "primary_metric": "Cost per opportunity",
        "guardrail_metrics": [
@@ -358,14 +366,16 @@
            "description": "Demo offer with the ROI message",
            "objective": "Demo",
            "theme": "ROI",
-           "creative_id": "CR001"
+           "creative_id": "CR001",
+           "cta": "Book Demo"
           },
           "variant": {
            "label": "Variant",
            "description": "Webinar offer with the ROI message",
            "objective": "Webinar",
            "theme": "ROI",
-           "creative_id": "CR001"
+           "creative_id": "CR001",
+           "cta": "Register"
           },
           "primary_metric": "Pipeline per $",
           "guardrail_metrics": [
@@ -373,7 +383,7 @@
            "CTR",
            "Qualified lead rate"
           ],
-          "daily_budget_per_arm": 750,
+          "daily_budget_per_arm": 600,
           "runtime_days": 28,
           "decision_rule": "Read on day 42. If Webinar's pipeline per dollar is at least 25% higher than Demo's, make Webinar the default Google offer for this audience. If the arms are within 25% of each other, keep both and repeat on a second audience. If Demo is at least 25% higher, keep the current mix.",
           "evidence_ids": [
@@ -409,14 +419,16 @@
            "description": "Webinar offer with the ROI message",
            "objective": "Webinar",
            "theme": "ROI",
-           "creative_id": "CR002"
+           "creative_id": "CR002",
+           "cta": "Register"
           },
           "variant": {
            "label": "Variant",
            "description": "Content download offer with the ROI message",
            "objective": "Content Download",
            "theme": "ROI",
-           "creative_id": "CR002"
+           "creative_id": "CR002",
+           "cta": "Download Guide"
           },
           "primary_metric": "Cost per opportunity",
           "guardrail_metrics": [
@@ -461,7 +473,8 @@
            "objective": "Webinar",
            "theme": "ROI",
            "creative_id": "CR002",
-           "targeting": "Current legal-interest audience, as configured today (channel owner to confirm)"
+           "targeting": "Current legal-interest audience, as configured today (channel owner to confirm)",
+           "cta": "Register"
           },
           "variant": {
            "label": "Variant",
@@ -469,7 +482,8 @@
            "objective": "Webinar",
            "theme": "ROI",
            "creative_id": "CR002",
-           "targeting": "Role-targeted: general counsel, legal operations leaders and law firm partners"
+           "targeting": "Role-targeted: general counsel, legal operations leaders and law firm partners",
+           "cta": "Register"
           },
           "primary_metric": "Cost per opportunity",
           "guardrail_metrics": [

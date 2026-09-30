@@ -9,6 +9,7 @@ removed from the brief and listed as held back, so nothing unverified ships.
 from __future__ import annotations
 
 import json
+import re
 import time
 from dataclasses import dataclass, field
 from typing import Any, Callable, Protocol
@@ -119,6 +120,19 @@ def review(payload: Any, result: Result) -> Review:
     for i, c in enumerate(brief.risks_and_observations):
         check(f"risks_and_observations[{i}]", c)
 
+    # Internal ids mean nothing to the reader. Experiments are referred to by number or title.
+    internal = [e.proposal.proposal_id for e in brief.experiments]
+    sections = [("headline", [brief.headline]), ("what_happened", brief.what_happened), ("why", brief.why),
+                ("creative_recommendations", brief.creative_recommendations), ("risks_and_observations", brief.risks_and_observations)]
+    for name, claims in sections:
+        for i, c in enumerate(claims):
+            used = [pid for pid in internal if re.search(rf"\b{re.escape(pid)}\b", c.text)]
+            if used:
+                problems.append({
+                    "where": name if name == "headline" else f"{name}[{i}]",
+                    "message": f"refers to an experiment by its internal id ({', '.join(used)}). Use 'experiment 1', 'experiment 2' or the title.",
+                })
+
     verdicts = []
     seen: dict[tuple, int] = {}
     if sorted(e.rank for e in brief.experiments) != [1, 2, 3]:
@@ -144,6 +158,13 @@ def review(payload: Any, result: Result) -> Review:
                 })
             else:
                 seen[key] = i
+    slate = sum(v["computed"].get("total_budget", 0) for v in verdicts)
+    if slate > cfg.max_slate_budget:
+        problems.append({
+            "where": "experiments",
+            "message": f"the three tests cost ${slate:,.0f} together, over the ${cfg.max_slate_budget:,.0f} ceiling for one brief. "
+                       "Size each test at the smallest budget that comfortably clears the minimum sample, not at the maximum.",
+        })
         if e.signal_id and not pack.has(e.signal_id):
             problems.append({"where": where, "message": f"signal_id '{e.signal_id}' does not exist."})
         # Numbers that belong to the design itself are allowed in the experiment's own text.
@@ -195,6 +216,14 @@ def finalize(rev: Review, result: Result) -> tuple[Brief, list[dict], list[dict]
     verdicts = [v for i, v in enumerate(rev.verdicts) if f"experiments[{i}]" not in failing]
     for section in ("what_happened", "why", "creative_recommendations", "risks_and_observations", "experiments"):
         setattr(data, section, keep(section, getattr(brief, section)))
+    # If the slate is still over its ceiling, drop the lowest-ranked tests until it fits.
+    cap = result.config.max_slate_budget
+    while data.experiments and sum(v["computed"].get("total_budget", 0) for v in verdicts) > cap:
+        worst = max(range(len(data.experiments)), key=lambda i: data.experiments[i].rank)
+        dropped = data.experiments.pop(worst)
+        verdicts.pop(worst)
+        held.append({"where": f"experiment ranked {dropped.rank}", "text": dropped.proposal.title,
+                     "reasons": [f"removed to bring the combined test budget under ${cap:,.0f}"]})
     if "headline" in failing:
         top = result.signals[0]
         held.append({"where": "headline", "text": brief.headline.text, "reasons": [p["message"] for p in rev.problems if p["where"] == "headline"]})
