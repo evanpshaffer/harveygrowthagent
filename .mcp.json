@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "growth-agent": {
+      "command": "python",
+      "args": ["mcp_server.py"],
+      "env": {"GROWTH_AGENT_SOURCE": "csv"}
+    }
+  }
+}

@@ -1,0 +1,19 @@
+experiment_id,start_date,platform,variable_tested,hypothesis,theme,result,lift_pct,confidence,runtime_days,sample_size,primary_metric,notes
+E001,2026-04-01,Meta,Headline,ROI vs productivity messaging,ROI,Win,18,High,28,410,Qualified pipeline per $,"ROI messaging consistently stronger, especially enterprise."
+E002,2026-01-22,Meta,Creative format,Video vs static for In-House,AI Productivity,Win,14,High,35,360,Opportunity rate,LinkedIn video performs well for in-house audiences.
+E003,2026-04-25,LinkedIn,Offer,Webinar vs content download,Customer Proof,Win,22,Medium,42,180,ARR per $,Lower CTR but stronger downstream revenue.
+E004,2026-04-24,Meta,CTA,Talk to Sales vs Book Demo,ROI,Neutral,2,High,31,520,Demo conversion rate,No meaningful difference.
+E005,2026-03-22,Meta,Creative concept,Stock photo vs product UI,Workflow Automation,Loss,-16,High,24,300,Qualified lead rate,Stock photos underperform product-oriented creative.
+E006,2026-04-03,Meta,Headline,Speed messaging vs ROI,Speed,Loss,-11,Medium,21,210,Pipeline per $,Speed is weaker for enterprise.
+E007,2026-04-05,Meta,Audience,Broad legal vs role-targeted,AI Productivity,Loss,-9,Medium,18,160,Qualified lead rate,Broad targeting creates cheaper but lower-quality leads.
+E008,2026-04-28,Meta,Creative format,Carousel vs static,Customer Proof,Neutral,3,Medium,20,145,Opportunity rate,No clear winner.
+E009,2026-03-25,Meta,Headline,Customer proof vs productivity,Customer Proof,Win,12,High,30,330,Pipeline per $,Strong for law firm enterprise.
+E010,2026-02-12,Google,Bid strategy,Max conversions vs target CPA,ROI,Win,8,Medium,26,240,Qualified pipeline per $,"Promising, but requires budget guardrails."
+E011,2026-04-15,Google,Headline,Security messaging vs workflow,Security,Inconclusive,9,Low,3,18,CTR,False winner: only three days and insufficient sample.
+E012,2026-04-20,Meta,Creative format,Video vs static for Meta,AI Productivity,Win,21,Low,4,24,CTR,False winner: too little data and no pipeline maturity.
+E013,2026-05-03,Google,Offer,Demo vs webinar,ROI,Win,15,Low,5,31,Lead conversion rate,False winner: downstream attribution incomplete.
+E014,2026-04-20,Google,Headline,ROI vs productivity messaging - repeat,ROI,Win,17,High,29,390,Qualified pipeline per $,Duplicate confirmatory test.
+E015,2026-05-11,LinkedIn,CTA,Register vs Save Your Seat,Customer Proof,Neutral,1,High,27,270,Registration rate,No meaningful difference.
+E016,2026-02-05,Google,Creative concept,Customer logo wall vs quote card,Customer Proof,Win,19,High,34,310,Opportunity rate,Logo wall is effective for enterprise.
+E017,2026-04-18,LinkedIn,Audience,CFO targeting vs legal leaders,ROI,Loss,-23,High,40,290,Qualified pipeline per $,Finance audiences are poor primary targets.
+E018,2026-02-12,Meta,Headline,Automation vs AI productivity,Workflow Automation,Win,10,Medium,25,205,Pipeline per $,More effective for in-house mid-market.

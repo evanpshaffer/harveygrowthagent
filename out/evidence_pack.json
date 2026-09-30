@@ -1,0 +1,5172 @@
+{
+  "meta": {
+    "agent_version": "0.1.0",
+    "generated_at": "2026-09-30T21:46:37Z",
+    "source": "sample_csv",
+    "synthetic_data": true,
+    "rows": {
+      "campaigns": 128,
+      "daily": 5691,
+      "experiments": 18,
+      "creatives": 32
+    }
+  },
+  "windows": {
+    "as_of": "2026-06-30",
+    "reporting_week": [
+      "2026-06-24",
+      "2026-06-30"
+    ],
+    "prior_week": [
+      "2026-06-17",
+      "2026-06-23"
+    ],
+    "immature_from": "2026-06-17",
+    "immature_days": 14,
+    "immature_basis": "source flag"
+  },
+  "assumptions": [
+    {
+      "id": "A1",
+      "assumption": "The campaign summary is the CRM-reconciled record of lifetime outcomes. The daily table is a partial, same-day view of outcomes.",
+      "why": "Spend and clicks match exactly across the two tables but daily outcomes are a small fraction of summary outcomes.",
+      "if_wrong": "If the daily table is the truth, every efficiency number in the brief is overstated and the first job is fixing the summary."
+    },
+    {
+      "id": "A2",
+      "assumption": "'Last week' is the 7 days ending on the latest date in the data, compared with the 7 days before.",
+      "why": "It is what a live weekly run would see. Full 7-day windows absorb the weekday pattern.",
+      "if_wrong": "The window is defined in one function (build_windows). Nothing else changes."
+    },
+    {
+      "id": "A3",
+      "assumption": "Anything the source flags as immature is excluded from performance judgments and efficiency benchmarks.",
+      "why": "Qualified leads inside the window are about a quarter complete when measured against each campaign's own history.",
+      "if_wrong": "If the lag is longer than the flag suggests, recent campaigns will look worse than they are for longer."
+    },
+    {
+      "id": "A4",
+      "assumption": "Pipeline per dollar is the primary success metric, supported by cost per opportunity and ARR per dollar. CTR, CPC and cost per lead are diagnostics only.",
+      "why": "The brief asks for qualified pipeline, opportunities and revenue over click metrics.",
+      "if_wrong": "Change outcome_metrics in config. Rankings are recomputed."
+    },
+    {
+      "id": "A5",
+      "assumption": "In the experiment log the first-named arm is the variant, so 'Win' on 'A vs B' means A beat B.",
+      "why": "Every note in the log that names a winner is consistent with this reading.",
+      "if_wrong": "The direction of each learning flips. Trust tiers do not change."
+    },
+    {
+      "id": "A6",
+      "assumption": "Absolute dollar magnitudes are synthetic. Ratios between segments are the signal.",
+      "why": "The data dictionary says the data is synthetic, and pipeline per dollar is implausibly high in absolute terms.",
+      "if_wrong": "No change to rankings."
+    },
+    {
+      "id": "A7",
+      "assumption": "An experiment needs at least 14 days and a sample of 100 to count as a read; a new test needs at least 28 days.",
+      "why": "Two weekly cycles is the floor for any read, and pipeline outcomes need longer than lead outcomes.",
+      "if_wrong": "These are defaults in config for the marketing lead to set."
+    },
+    {
+      "id": "A8",
+      "assumption": "No proposed test may exceed the highest daily budget the team has already run, or a fixed total budget ceiling.",
+      "why": "The agent should never ask for more exposure than the team has already chosen to take.",
+      "if_wrong": "Raise the ceilings in config. Approval is still required for every launch."
+    }
+  ],
+  "reliability_levels": {
+    "final": "Settled data. Safe to act on.",
+    "provisional": "Inside the attribution lag window. Will still change.",
+    "observational": "A pattern across campaigns, not a controlled test. Shows where to test, not what is true.",
+    "modeled": "An estimate from a stated formula. Not an observed result.",
+    "data_quality": "A known problem with the data and how the agent handles it."
+  },
+  "signals": [
+    {
+      "id": "SIG.01",
+      "rank": 1,
+      "type": "budget_moved_to_weaker_offer",
+      "title": "Google budget moved from Webinar to Demo",
+      "statement": "In the last 8 weeks Google Webinar fell from 55% to 5% of platform spend while Demo rose from 42% to 92%. In settled campaigns Google Webinar returns 3.2x the pipeline per dollar of Google Demo. The only test favoring Demo (E013) is rejected as a false winner.",
+      "strength": "strong",
+      "evidence_ids": [
+        "MIX.objective",
+        "SEG.platform_objective",
+        "SEG.objective",
+        "EXP.E013"
+      ],
+      "test_angle": "Head-to-head Webinar vs Demo on Google, same audience and theme, read on pipeline per dollar after attribution settles.",
+      "cautions": [
+        "The mix shift is a fact. Why it happened is not in the data."
+      ],
+      "metrics": {
+        "platform": "Google",
+        "offer_down": "Webinar",
+        "offer_up": "Demo",
+        "share_down": [
+          54.5018,
+          4.7374
+        ],
+        "share_up": [
+          41.9886,
+          91.6373
+        ],
+        "efficiency_ratio": 3.1923
+      }
+    },
+    {
+      "id": "SIG.02",
+      "rank": 2,
+      "type": "false_winner",
+      "title": "E013 is logged as a win but is not a valid read",
+      "statement": "E013 (Demo vs webinar, Google) is logged as Win +15% but is not a valid read: ran 5 days (minimum 14); sample of 31 (minimum 100); primary metric 'Lead conversion rate' is a proxy, not a business outcome; logged confidence is Low. Campaign data disagrees: Demo returns 0.31x the pipeline per dollar of Webinar in settled campaigns on Google (18 vs 15 campaigns).",
+      "strength": "strong",
+      "evidence_ids": [
+        "EXP.E013",
+        "EXP.summary"
+      ],
+      "test_angle": "Re-run 'Demo vs webinar' at full length and sample on an outcome metric before acting on it.",
+      "cautions": [
+        "Until re-run, this result should be removed from the team's list of learnings."
+      ],
+      "metrics": {
+        "runtime_days": 5,
+        "sample_size": 31,
+        "observed": "disagrees"
+      }
+    },
+    {
+      "id": "SIG.03",
+      "rank": 3,
+      "type": "segment_outperforms",
+      "title": "Google beats comparable campaigns",
+      "statement": "Google (platform) returns 1.86x the pipeline of comparable campaigns, above benchmark in all 3 cells with enough spend. It takes 31% of settled spend and 37% of the last 8 weeks' spend. Like for like, that is pipeline worth 29% of the program total gained (modeled).",
+      "strength": "strong",
+      "evidence_ids": [
+        "SEG.platform",
+        "SEG.platform_objective"
+      ],
+      "test_angle": "Controlled test that scales Google against the current mix, measured on pipeline per dollar.",
+      "cautions": [
+        "Observational gap. Confirms where to test, not the size of the win."
+      ],
+      "metrics": {
+        "dimension": "platform",
+        "value": "Google",
+        "adjusted_index": 1.861,
+        "spend_share": 0.3075,
+        "recent_spend_share": 0.3738,
+        "pipeline_gap_share_modeled": 0.293,
+        "cells_evaluated": 3
+      }
+    },
+    {
+      "id": "SIG.04",
+      "rank": 4,
+      "type": "segment_underperforms",
+      "title": "Demo trails comparable campaigns",
+      "statement": "Demo (objective) returns 0.46x the pipeline of comparable campaigns, below benchmark in all 3 cells with enough spend. It takes 49% of settled spend and 61% of the last 8 weeks' spend. Like for like, that is pipeline worth 23% of the program total not realized (modeled).",
+      "strength": "strong",
+      "evidence_ids": [
+        "SEG.objective",
+        "SEG.platform_objective"
+      ],
+      "test_angle": "Controlled test that moves budget away from Demo toward the stronger alternative, measured on pipeline per dollar.",
+      "cautions": [
+        "Observational gap. Confirms where to test, not the size of the win."
+      ],
+      "metrics": {
+        "dimension": "objective",
+        "value": "Demo",
+        "adjusted_index": 0.4562,
+        "spend_share": 0.4945,
+        "recent_spend_share": 0.6134,
+        "pipeline_gap_share_modeled": -0.2281,
+        "cells_evaluated": 3
+      }
+    },
+    {
+      "id": "SIG.05",
+      "rank": 5,
+      "type": "segment_outperforms",
+      "title": "Webinar beats comparable campaigns",
+      "statement": "Webinar (objective) returns 1.42x the pipeline of comparable campaigns, above benchmark in all 3 cells with enough spend. It takes 41% of settled spend and 22% of the last 8 weeks' spend. Like for like, that is pipeline worth 22% of the program total gained (modeled).",
+      "strength": "strong",
+      "evidence_ids": [
+        "SEG.objective",
+        "SEG.platform_objective",
+        "EXP.E003"
+      ],
+      "test_angle": "Controlled test that scales Webinar against the current mix, measured on pipeline per dollar.",
+      "cautions": [
+        "Observational gap. Confirms where to test, not the size of the win."
+      ],
+      "metrics": {
+        "dimension": "objective",
+        "value": "Webinar",
+        "adjusted_index": 1.424,
+        "spend_share": 0.4106,
+        "recent_spend_share": 0.2197,
+        "pipeline_gap_share_modeled": 0.2186,
+        "cells_evaluated": 3
+      }
+    },
+    {
+      "id": "SIG.06",
+      "rank": 6,
+      "type": "segment_underperforms",
+      "title": "LinkedIn trails comparable campaigns",
+      "statement": "LinkedIn (platform) returns 0.06x the pipeline of comparable campaigns, below benchmark in all 3 cells with enough spend. It takes 31% of settled spend and 23% of the last 8 weeks' spend. Like for like, that is pipeline worth 19% of the program total not realized (modeled).",
+      "strength": "strong",
+      "evidence_ids": [
+        "SEG.platform",
+        "SEG.platform_objective"
+      ],
+      "test_angle": "Controlled test that moves budget away from LinkedIn toward the stronger alternative, measured on pipeline per dollar.",
+      "cautions": [
+        "Observational gap. Confirms where to test, not the size of the win."
+      ],
+      "metrics": {
+        "dimension": "platform",
+        "value": "LinkedIn",
+        "adjusted_index": 0.0617,
+        "spend_share": 0.3105,
+        "recent_spend_share": 0.2278,
+        "pipeline_gap_share_modeled": -0.1874,
+        "cells_evaluated": 3
+      }
+    },
+    {
+      "id": "SIG.07",
+      "rank": 7,
+      "type": "zero_outcome_spend",
+      "title": "24 of 41 LinkedIn campaigns produced no opportunities",
+      "statement": "24 of 41 settled LinkedIn campaigns produced zero opportunities on $385,683 of spend.",
+      "strength": "strong",
+      "evidence_ids": [
+        "ZERO.opportunities",
+        "SEG.platform",
+        "SEG.platform_objective"
+      ],
+      "test_angle": "Holdout test of LinkedIn's real contribution before cutting it, since last-touch attribution can hide influence on enterprise deals.",
+      "cautions": [
+        "Do not read this as 'turn the channel off'. Read it as 'prove what it contributes'."
+      ],
+      "metrics": {
+        "platform": "LinkedIn",
+        "campaigns": 24,
+        "of": 41,
+        "spend": 385682.87
+      }
+    },
+    {
+      "id": "SIG.08",
+      "rank": 8,
+      "type": "segment_outperforms",
+      "title": "Law Firm - Enterprise beats comparable campaigns",
+      "statement": "Law Firm - Enterprise (audience) returns 1.23x the pipeline of comparable campaigns, above benchmark in all 5 cells with enough spend. It takes 26% of settled spend and 13% of the last 8 weeks' spend. Like for like, that is pipeline worth 9% of the program total gained (modeled).",
+      "strength": "strong",
+      "evidence_ids": [
+        "SEG.audience",
+        "SEG.platform_objective"
+      ],
+      "test_angle": "Controlled test that scales Law Firm - Enterprise against the current mix, measured on pipeline per dollar.",
+      "cautions": [
+        "Observational gap. Confirms where to test, not the size of the win."
+      ],
+      "metrics": {
+        "dimension": "audience",
+        "value": "Law Firm - Enterprise",
+        "adjusted_index": 1.2348,
+        "spend_share": 0.256,
+        "recent_spend_share": 0.1257,
+        "pipeline_gap_share_modeled": 0.0915,
+        "cells_evaluated": 5
+      }
+    },
+    {
+      "id": "SIG.09",
+      "rank": 9,
+      "type": "segment_outperforms",
+      "title": "ROI beats comparable campaigns",
+      "statement": "ROI (theme) returns 1.29x the pipeline of comparable campaigns, above benchmark in all 6 cells with enough spend. It takes 20% of settled spend and 15% of the last 8 weeks' spend. Like for like, that is pipeline worth 6% of the program total gained (modeled).",
+      "strength": "strong",
+      "evidence_ids": [
+        "SEG.theme",
+        "SEG.platform_objective",
+        "EXP.E001",
+        "EXP.E006",
+        "EXP.E014"
+      ],
+      "test_angle": "Controlled test that scales ROI against the current mix, measured on pipeline per dollar.",
+      "cautions": [
+        "Observational gap. Confirms where to test, not the size of the win."
+      ],
+      "metrics": {
+        "dimension": "theme",
+        "value": "ROI",
+        "adjusted_index": 1.2866,
+        "spend_share": 0.2048,
+        "recent_spend_share": 0.1492,
+        "pipeline_gap_share_modeled": 0.0649,
+        "cells_evaluated": 6
+      }
+    },
+    {
+      "id": "SIG.10",
+      "rank": 10,
+      "type": "segment_underperforms",
+      "title": "Security trails comparable campaigns",
+      "statement": "Security (theme) returns 0.65x the pipeline of comparable campaigns, below benchmark in all 4 cells with enough spend. It takes 6% of settled spend and 3% of the last 8 weeks' spend. Like for like, that is pipeline worth 3% of the program total not realized (modeled).",
+      "strength": "strong",
+      "evidence_ids": [
+        "SEG.theme",
+        "SEG.platform_objective"
+      ],
+      "test_angle": "Controlled test that moves budget away from Security toward the stronger alternative, measured on pipeline per dollar.",
+      "cautions": [
+        "Observational gap. Confirms where to test, not the size of the win."
+      ],
+      "metrics": {
+        "dimension": "theme",
+        "value": "Security",
+        "adjusted_index": 0.652,
+        "spend_share": 0.0557,
+        "recent_spend_share": 0.0261,
+        "pipeline_gap_share_modeled": -0.0257,
+        "cells_evaluated": 4
+      }
+    },
+    {
+      "id": "SIG.11",
+      "rank": 11,
+      "type": "segment_underperforms",
+      "title": "Customer Proof trails comparable campaigns",
+      "statement": "Customer Proof (theme) returns 0.75x the pipeline of comparable campaigns, below benchmark in all 4 cells with enough spend. It takes 9% of settled spend and 24% of the last 8 weeks' spend. Like for like, that is pipeline worth 2% of the program total not realized (modeled).",
+      "strength": "strong",
+      "evidence_ids": [
+        "SEG.theme",
+        "SEG.platform_objective",
+        "EXP.E009"
+      ],
+      "test_angle": "Controlled test that moves budget away from Customer Proof toward the stronger alternative, measured on pipeline per dollar.",
+      "cautions": [
+        "Observational gap. Confirms where to test, not the size of the win."
+      ],
+      "metrics": {
+        "dimension": "theme",
+        "value": "Customer Proof",
+        "adjusted_index": 0.7482,
+        "spend_share": 0.0925,
+        "recent_spend_share": 0.2353,
+        "pipeline_gap_share_modeled": -0.0195,
+        "cells_evaluated": 4
+      }
+    },
+    {
+      "id": "SIG.12",
+      "rank": 12,
+      "type": "creative_fatigue",
+      "title": "Meta creative wears out after week 6",
+      "statement": "Meta CTR holds for 6 weeks of a campaign's life and is at 79% of launch level by week 9. 21 campaigns ran past that point, putting $190,139 (17% of Meta spend) behind tired creative.",
+      "strength": "strong",
+      "evidence_ids": [
+        "FATIGUE.curve",
+        "DQ.creative_age"
+      ],
+      "test_angle": "Rotate in a fresh creative at day 42 versus letting the original run, on Meta.",
+      "cautions": [
+        "Fatigue is measured on CTR. Whether it carries through to pipeline is untested."
+      ],
+      "metrics": {
+        "platform": "Meta",
+        "campaigns_past_onset": 21,
+        "spend_past_onset": 190139.02,
+        "share_of_platform_spend": 0.1678,
+        "clicks_below_launch_rate": 22381.3864,
+        "onset_week": 7,
+        "onset_day": 43
+      }
+    },
+    {
+      "id": "SIG.13",
+      "rank": 13,
+      "type": "creative_fatigue",
+      "title": "LinkedIn creative wears out after week 7",
+      "statement": "LinkedIn CTR holds for 7 weeks of a campaign's life and is at 71% of launch level by week 10. 18 campaigns ran past that point, putting $94,289 (10% of LinkedIn spend) behind tired creative.",
+      "strength": "strong",
+      "evidence_ids": [
+        "FATIGUE.curve",
+        "DQ.creative_age"
+      ],
+      "test_angle": "Rotate in a fresh creative at day 49 versus letting the original run, on LinkedIn.",
+      "cautions": [
+        "Fatigue is measured on CTR. Whether it carries through to pipeline is untested."
+      ],
+      "metrics": {
+        "platform": "LinkedIn",
+        "campaigns_past_onset": 18,
+        "spend_past_onset": 94289.42,
+        "share_of_platform_spend": 0.1019,
+        "clicks_below_launch_rate": 2686.7087,
+        "onset_week": 8,
+        "onset_day": 50
+      }
+    },
+    {
+      "id": "SIG.14",
+      "rank": 14,
+      "type": "unconfirmed_learnings",
+      "title": "Learnings the team is relying on that are not confirmed",
+      "statement": "8 experiments are usable only as direction (E002, E003, E004, E006, E007, E009, E010, E018). Settled campaign data points the other way on E003, E004, E009.",
+      "strength": "moderate",
+      "evidence_ids": [
+        "EXP.E002",
+        "EXP.E003",
+        "EXP.E004",
+        "EXP.E006",
+        "EXP.E007",
+        "EXP.E009",
+        "EXP.E010",
+        "EXP.E018"
+      ],
+      "test_angle": "A confirmation test for whichever of these the next quarter's plan depends on most.",
+      "cautions": [
+        "Disagreement with observational data is a reason to re-test, not proof the experiment was wrong."
+      ],
+      "metrics": {
+        "experiments": [
+          {
+            "experiment_id": "E002",
+            "hypothesis": "Video vs static for In-House",
+            "why": "notes describe LinkedIn but the test is logged on Meta",
+            "campaign_data": "agrees"
+          },
+          {
+            "experiment_id": "E003",
+            "hypothesis": "Webinar vs content download",
+            "why": "logged confidence is Medium",
+            "campaign_data": "disagrees"
+          },
+          {
+            "experiment_id": "E004",
+            "hypothesis": "Talk to Sales vs Book Demo",
+            "why": "primary metric 'Demo conversion rate' is a proxy, not a business outcome",
+            "campaign_data": "disagrees"
+          },
+          {
+            "experiment_id": "E006",
+            "hypothesis": "Speed messaging vs ROI",
+            "why": "logged confidence is Medium",
+            "campaign_data": "agrees"
+          },
+          {
+            "experiment_id": "E007",
+            "hypothesis": "Broad legal vs role-targeted",
+            "why": "logged confidence is Medium",
+            "campaign_data": "not observable"
+          },
+          {
+            "experiment_id": "E009",
+            "hypothesis": "Customer proof vs productivity",
+            "why": "valid test, but settled campaign data points the other way",
+            "campaign_data": "disagrees"
+          },
+          {
+            "experiment_id": "E010",
+            "hypothesis": "Max conversions vs target CPA",
+            "why": "logged confidence is Medium",
+            "campaign_data": "not observable"
+          },
+          {
+            "experiment_id": "E018",
+            "hypothesis": "Automation vs AI productivity",
+            "why": "logged confidence is Medium",
+            "campaign_data": "unclear"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SIG.15",
+      "rank": 15,
+      "type": "false_winner",
+      "title": "E012 is logged as a win but is not a valid read",
+      "statement": "E012 (Video vs static for Meta, Meta) is logged as Win +21% but is not a valid read: ran 4 days (minimum 14); sample of 24 (minimum 100); primary metric 'CTR' is a proxy, not a business outcome; logged confidence is Low. Same question as E002.",
+      "strength": "moderate",
+      "evidence_ids": [
+        "EXP.E012",
+        "EXP.summary"
+      ],
+      "test_angle": "Re-run 'Video vs static for Meta' at full length and sample on an outcome metric before acting on it.",
+      "cautions": [
+        "Until re-run, this result should be removed from the team's list of learnings."
+      ],
+      "metrics": {
+        "runtime_days": 4,
+        "sample_size": 24,
+        "observed": "unclear"
+      }
+    },
+    {
+      "id": "SIG.16",
+      "rank": 16,
+      "type": "lead_quality",
+      "title": "Meta buys cheap leads that do not qualify",
+      "statement": "Meta has the lowest cost per lead ($10) but only 30% of its leads qualify, against 63% on Google. 42 of its campaigns carry the source's 'High volume / low quality' flag.",
+      "strength": "moderate",
+      "evidence_ids": [
+        "FUNNEL.platform",
+        "DQ.source_flags",
+        "EXP.E007"
+      ],
+      "test_angle": "Tighter targeting or a qualifying step on Meta, judged on cost per opportunity rather than cost per lead.",
+      "cautions": [
+        "A lower lead volume is the expected and acceptable cost of this test."
+      ],
+      "metrics": {
+        "platform": "Meta",
+        "cpl": 9.8967,
+        "ql_rate": 0.2972,
+        "best_ql_rate": 0.6263,
+        "flagged_campaigns": 42
+      }
+    },
+    {
+      "id": "SIG.17",
+      "rank": 17,
+      "type": "under_tested_theme",
+      "title": "Security has never had a valid test",
+      "statement": "Security has 7 settled campaigns on 6% of spend and 0 valid experiments (E011 rejected). Its campaigns return 0.65x comparable campaigns, and it exists only in Static format.",
+      "strength": "moderate",
+      "evidence_ids": [
+        "SEG.theme",
+        "CREATIVE.gaps",
+        "EXP.E011"
+      ],
+      "test_angle": "A small, properly powered read on Security before deciding whether to invest in more creative for it.",
+      "cautions": [
+        "Current evidence says Security underperforms. This is an exploration bet, not a scaling bet."
+      ],
+      "metrics": {
+        "theme": "Security",
+        "adjusted_index": 0.652,
+        "spend_share": 0.0557,
+        "valid_experiments": 0,
+        "missing_formats": [
+          "Carousel",
+          "Video"
+        ]
+      }
+    },
+    {
+      "id": "SIG.18",
+      "rank": 18,
+      "type": "unused_creative",
+      "title": "CR021 has never run",
+      "statement": "CR021 (Workflow Automation, Video, Law Firm) is active in the library with zero campaigns.",
+      "strength": "context",
+      "evidence_ids": [
+        "CREATIVE.gaps",
+        "THEME.by_audience"
+      ],
+      "test_angle": "Use CR021 as the fresh variant in a rotation or format test for Law Firm audiences.",
+      "cautions": [],
+      "metrics": {
+        "creative_id": "CR021",
+        "theme": "Workflow Automation",
+        "format": "Video",
+        "audience_group": "Law Firm"
+      }
+    },
+    {
+      "id": "SIG.19",
+      "rank": 19,
+      "type": "clean_slate",
+      "title": "No campaigns are scheduled past the reporting week",
+      "statement": "6 campaigns were still live on Jun 30 and 0 are scheduled to run past it. Weekly spend is $17,013, down 91% from the peak week of Mar 04 ($194,291, 50 campaigns). The 9 campaigns live this week were 7 Demo, 1 Content Download, 1 Webinar.",
+      "strength": "context",
+      "evidence_ids": [
+        "WEEK.program_status",
+        "WEEK.spend_bridge"
+      ],
+      "test_angle": "Treat the next launches as the experiment slate. Every new campaign can carry a test cell at no extra cost.",
+      "cautions": [],
+      "metrics": {
+        "live_on_as_of": 6
+      }
+    }
+  ],
+  "evidence": [
+    {
+      "id": "DQ.reconciliation",
+      "title": "Daily and summary files disagree on outcomes",
+      "statement": "Spend, impressions and clicks reconcile exactly between the daily and summary tables, but the daily table carries only 16% of conversions, 13% of qualified leads, 4% of opportunities and 3.5% of pipeline.",
+      "source": "campaign_summary + daily_campaign_performance",
+      "reliability": "data_quality",
+      "caveats": [
+        "Handling: lifetime efficiency (pipeline per dollar, cost per opportunity) comes from the campaign summary only.",
+        "Handling: the daily table is used for delivery trends and for comparing a campaign with itself over time.",
+        "Handling: outcome levels from the two tables are never combined in one calculation.",
+        "Assumption A1: the summary is the CRM-reconciled record; daily outcomes are a partial same-day view."
+      ],
+      "data": {
+        "daily_as_share_of_summary": {
+          "spend": 1.0,
+          "impressions": 1.0,
+          "clicks": 1.0,
+          "conversions": 0.1555,
+          "qualified_leads": 0.1342,
+          "opportunities": 0.0416,
+          "pipeline": 0.0353,
+          "arr": 0.0352
+        }
+      }
+    },
+    {
+      "id": "DQ.daily_outcome_gaps",
+      "title": "Some campaigns have no daily outcome data at all",
+      "statement": "20 campaigns show zero conversions in the daily table while the summary credits them with 2,403 (20 on LinkedIn), and 73 campaigns with opportunities in the summary show none in the daily table.",
+      "source": "campaign_summary + daily_campaign_performance",
+      "reliability": "data_quality",
+      "caveats": [
+        "Handling: a zero in the daily outcome columns is treated as 'not reported', never as 'no result'."
+      ],
+      "data": {
+        "campaigns_missing_daily_conversions": [
+          "C002",
+          "C011",
+          "C017",
+          "C032",
+          "C035",
+          "C038",
+          "C041",
+          "C047",
+          "C059",
+          "C080",
+          "C083",
+          "C089",
+          "C092",
+          "C095",
+          "C098",
+          "C101",
+          "C104",
+          "C113",
+          "C119",
+          "C122"
+        ],
+        "by_platform": {
+          "LinkedIn": 20
+        },
+        "campaigns_missing_daily_opportunities": 73
+      }
+    },
+    {
+      "id": "DQ.missing_crm",
+      "title": "Daily rows with missing CRM pipeline and ARR",
+      "statement": "45 of 5,691 daily rows (0.8%) across 38 campaigns have no pipeline or ARR value, covering $26,453 of spend and 6 opportunities.",
+      "source": "daily_campaign_performance",
+      "reliability": "data_quality",
+      "caveats": [
+        "Handling: missing values stay missing. They are excluded from pipeline rates and never filled with zero."
+      ],
+      "data": {
+        "rows": 45,
+        "campaigns": 38,
+        "spend": 26453.37,
+        "opportunities_on_missing_rows": 6,
+        "by_platform": {
+          "Meta": 19,
+          "Google": 17,
+          "LinkedIn": 9
+        }
+      }
+    },
+    {
+      "id": "DQ.audience_labels",
+      "title": "Inconsistent audience labels",
+      "statement": "12 of 128 campaigns use a non-standard audience label (Enterprise Legal, IH MM, LF ENT, Law Firm MM). The agent's alias map resolves 128 of 128 campaigns to the same label as the source's cleaned field.",
+      "source": "campaign_summary",
+      "reliability": "data_quality",
+      "caveats": [
+        "Handling: all analysis groups on the canonical label. An unknown label is surfaced, not guessed."
+      ],
+      "data": {
+        "raw_to_canonical": {
+          "LF ENT": "Law Firm - Enterprise",
+          "IH MM": "In-House - Mid-Market",
+          "Law Firm MM": "Law Firm - Mid-Market",
+          "Enterprise Legal": "In-House - Enterprise"
+        }
+      }
+    },
+    {
+      "id": "DQ.attribution_lag",
+      "title": "Recent downstream data is incomplete",
+      "statement": "Everything from Jun 17 to Jun 30 is inside the attribution lag window (source flag). Measured against each campaign's own prior 28 days, conversions in the window are 96% of what their clicks would normally produce, but qualified leads are only 27% of what their conversions would normally produce (10 of 10 comparable campaigns are below their own baseline). Lead capture is current; qualification and everything after it is not. 14 campaigns carry the immature flag in the summary.",
+      "source": "daily_campaign_performance + campaign_summary",
+      "reliability": "data_quality",
+      "caveats": [
+        "Handling: for the reporting week only spend, impressions, clicks and conversions are treated as final.",
+        "Handling: qualified leads, opportunities and pipeline for the window are shown as provisional and never used to judge performance.",
+        "Handling: campaigns flagged immature are excluded from efficiency benchmarks."
+      ],
+      "data": {
+        "campaigns_checked": 14,
+        "campaigns_with_lower_ql_rate": 10,
+        "campaigns_comparable": 10,
+        "immature": {
+          "clicks": 44430.0,
+          "conversions": 345.0,
+          "qualified_leads": 35.0,
+          "cvr_pct": 0.7765,
+          "ql_rate": 0.1014
+        },
+        "baseline": {
+          "clicks": 151777.0,
+          "conversions": 1348.0,
+          "qualified_leads": 491.0,
+          "cvr_pct": 0.8881,
+          "ql_rate": 0.3642
+        },
+        "conversion_completeness": 0.9588,
+        "ql_completeness": 0.2742,
+        "immature_campaign_ids": [
+          "C001",
+          "C016",
+          "C022",
+          "C024",
+          "C034",
+          "C038",
+          "C043",
+          "C048",
+          "C052",
+          "C067",
+          "C079",
+          "C108",
+          "C119",
+          "C123"
+        ]
+      }
+    },
+    {
+      "id": "DQ.experiment_links",
+      "title": "Campaign-to-experiment links are unreliable",
+      "statement": "Of 60 campaigns linked to an experiment, 42 point to an experiment that ran on a different platform and 30 did not overlap the experiment's dates.",
+      "source": "campaign_summary + experiment_history",
+      "reliability": "data_quality",
+      "caveats": [
+        "Handling: linked_experiment_id is not used to attribute campaign results to an experiment."
+      ],
+      "data": {
+        "linked_campaigns": 60,
+        "platform_mismatch": 42,
+        "no_date_overlap": 30,
+        "clean_links": 10
+      }
+    },
+    {
+      "id": "DQ.creative_age",
+      "title": "creative_age_days measures campaign age, not creative exposure",
+      "statement": "creative_age_days equals days since campaign launch in 100% of rows and tops out at 70 days, yet 30 creatives ran in more than one campaign and the most reused have been in market for up to 172 days.",
+      "source": "daily_campaign_performance + campaign_summary + creative_library",
+      "reliability": "data_quality",
+      "caveats": [
+        "Handling: fatigue is measured within a campaign. True audience exposure to a reused creative is longer than the field suggests."
+      ],
+      "data": {
+        "share_equal_to_campaign_age": 1.0,
+        "reused_creatives": 30,
+        "max_true_exposure_days": 172
+      }
+    },
+    {
+      "id": "DQ.creative_format",
+      "title": "Campaign format does not always match the creative library",
+      "statement": "45 campaigns report a format that differs from their creative's library format. 43 are Google campaigns, where the field holds the ad type (RSA, Responsive Display) rather than the creative format. 2 are genuine mismatches on other platforms (C081, C095).",
+      "source": "campaign_summary + creative_library",
+      "reliability": "data_quality",
+      "caveats": [
+        "Handling: format comparisons exclude Google."
+      ],
+      "data": {
+        "mismatched": 45,
+        "non_google": [
+          "C081",
+          "C095"
+        ]
+      }
+    },
+    {
+      "id": "DQ.source_flags",
+      "title": "Flags carried in the source data",
+      "statement": "Campaign-level flags in the summary: High volume / low quality (42), Attribution immature (14), Under-tested theme (8).",
+      "source": "campaign_summary",
+      "reliability": "data_quality",
+      "caveats": [],
+      "data": {
+        "High volume / low quality": 42,
+        "Attribution immature": 14,
+        "Under-tested theme": 8
+      }
+    },
+    {
+      "id": "WEEK.totals",
+      "title": "Reporting week versus prior week",
+      "statement": "In the week of Jun 24 to Jun 30, 9 campaigns spent $17,013 (-53% vs the prior week's $36,140 across 14 campaigns), producing 11,713 clicks (-64%) and 86 conversions (-67%).",
+      "source": "daily_campaign_performance",
+      "reliability": "final",
+      "caveats": [
+        "Qualified leads, opportunities and pipeline for both weeks are provisional (see DQ.attribution_lag).",
+        "Daily conversion counts are a partial view (see DQ.reconciliation). Week-over-week direction is valid; absolute levels are not comparable with the campaign summary."
+      ],
+      "data": {
+        "spend": {
+          "this_week": 17013.42,
+          "prior_week": 36139.88,
+          "change_pct": -52.9234,
+          "reliability": "final"
+        },
+        "impressions": {
+          "this_week": 509019.0,
+          "prior_week": 1173900.0,
+          "change_pct": -56.6386,
+          "reliability": "final"
+        },
+        "clicks": {
+          "this_week": 11713.0,
+          "prior_week": 32717.0,
+          "change_pct": -64.199,
+          "reliability": "final"
+        },
+        "ctr_pct": {
+          "this_week": 2.3011,
+          "prior_week": 2.787,
+          "change_pct": -17.4358,
+          "reliability": "final"
+        },
+        "cpc": {
+          "this_week": 1.4525,
+          "prior_week": 1.1046,
+          "change_pct": 31.4953,
+          "reliability": "final"
+        },
+        "conversions": {
+          "this_week": 86.0,
+          "prior_week": 259.0,
+          "change_pct": -66.7954,
+          "reliability": "final"
+        },
+        "cpl": {
+          "this_week": 197.8305,
+          "prior_week": 139.5362,
+          "change_pct": 41.7771,
+          "reliability": "final"
+        },
+        "qualified_leads": {
+          "this_week": 10.0,
+          "prior_week": 25.0,
+          "change_pct": -60.0,
+          "reliability": "provisional"
+        },
+        "opportunities": {
+          "this_week": 1.0,
+          "prior_week": 0.0,
+          "change_pct": null,
+          "reliability": "provisional"
+        },
+        "pipeline": {
+          "this_week": 115555.0,
+          "prior_week": 0.0,
+          "change_pct": null,
+          "reliability": "provisional"
+        },
+        "campaigns": {
+          "this_week": 9,
+          "prior_week": 14
+        }
+      }
+    },
+    {
+      "id": "WEEK.spend_bridge",
+      "title": "Why spend changed",
+      "statement": "Spend moved -$19,126 week over week. 8 campaigns that ended or wound down account for -$19,000 of it (99%); the 6 campaigns live all 14 days moved -$126; 0 campaigns launched.",
+      "source": "daily_campaign_performance",
+      "reliability": "final",
+      "caveats": [],
+      "data": {
+        "full_week": {
+          "campaigns": [
+            "C001",
+            "C038",
+            "C048",
+            "C067",
+            "C119",
+            "C123"
+          ],
+          "this_week": 13788.25,
+          "prior_week": 13914.49,
+          "change": -126.24
+        },
+        "ended_or_ending": {
+          "campaigns": [
+            "C016",
+            "C022",
+            "C024",
+            "C034",
+            "C043",
+            "C052",
+            "C079",
+            "C108"
+          ],
+          "this_week": 3225.17,
+          "prior_week": 22225.39,
+          "change": -19000.22
+        },
+        "launched": {
+          "campaigns": [],
+          "this_week": 0.0,
+          "prior_week": 0.0,
+          "change": 0.0
+        }
+      }
+    },
+    {
+      "id": "WEEK.same_store",
+      "title": "Like-for-like performance",
+      "statement": "For the 6 campaigns live through both weeks, spend was -1%, CTR moved from 2.18% to 1.97% (-10%) and conversions went from 60 to 57.",
+      "source": "daily_campaign_performance",
+      "reliability": "final",
+      "caveats": [
+        "This is the fair read of week-over-week performance because it removes campaigns that ended."
+      ],
+      "data": {
+        "spend": {
+          "this_week": 13788.25,
+          "prior_week": 13914.49,
+          "change_pct": -0.9073,
+          "reliability": "final"
+        },
+        "impressions": {
+          "this_week": 408337.0,
+          "prior_week": 408668.0,
+          "change_pct": -0.081,
+          "reliability": "final"
+        },
+        "clicks": {
+          "this_week": 8028.0,
+          "prior_week": 8894.0,
+          "change_pct": -9.7369,
+          "reliability": "final"
+        },
+        "ctr_pct": {
+          "this_week": 1.966,
+          "prior_week": 2.1763,
+          "change_pct": -9.6637,
+          "reliability": "final"
+        },
+        "cpc": {
+          "this_week": 1.7175,
+          "prior_week": 1.5645,
+          "change_pct": 9.7821,
+          "reliability": "final"
+        },
+        "conversions": {
+          "this_week": 57.0,
+          "prior_week": 60.0,
+          "change_pct": -5.0,
+          "reliability": "final"
+        },
+        "cpl": {
+          "this_week": 241.8991,
+          "prior_week": 231.9082,
+          "change_pct": 4.3082,
+          "reliability": "final"
+        },
+        "qualified_leads": {
+          "this_week": 3.0,
+          "prior_week": 4.0,
+          "change_pct": -25.0,
+          "reliability": "provisional"
+        },
+        "opportunities": {
+          "this_week": 0.0,
+          "prior_week": 0.0,
+          "change_pct": null,
+          "reliability": "provisional"
+        },
+        "pipeline": {
+          "this_week": 0.0,
+          "prior_week": 0.0,
+          "change_pct": null,
+          "reliability": "provisional"
+        },
+        "campaigns": {
+          "this_week": 6,
+          "prior_week": 6
+        }
+      }
+    },
+    {
+      "id": "WEEK.by_platform",
+      "title": "Reporting week by platform",
+      "statement": "Google: $7,453 across 5 campaigns, CTR 3.33%, 48 conversions; LinkedIn: $6,113 across 2 campaigns, CTR 0.84%, conversions not reported in the daily feed; Meta: $3,447 across 2 campaigns, CTR 1.72%, 38 conversions.",
+      "source": "daily_campaign_performance",
+      "reliability": "final",
+      "caveats": [
+        "A platform showing zero conversions may have no daily outcome feed (see DQ.daily_outcome_gaps)."
+      ],
+      "data": [
+        {
+          "platform": "Google",
+          "conversions_reported": true,
+          "campaigns": 5,
+          "spend": 7453.27,
+          "spend_change_pct": -68.0137,
+          "ctr_pct": 3.3292,
+          "ctr_prior_pct": 3.4668,
+          "conversions": 48.0,
+          "conversions_prior": 158.0,
+          "cpl": 155.2765
+        },
+        {
+          "platform": "LinkedIn",
+          "conversions_reported": false,
+          "campaigns": 2,
+          "spend": 6112.88,
+          "spend_change_pct": -2.5834,
+          "ctr_pct": 0.841,
+          "ctr_prior_pct": 0.971,
+          "conversions": 0.0,
+          "conversions_prior": 0.0,
+          "cpl": null
+        },
+        {
+          "platform": "Meta",
+          "conversions_reported": true,
+          "campaigns": 2,
+          "spend": 3447.27,
+          "spend_change_pct": -47.4776,
+          "ctr_pct": 1.7231,
+          "ctr_prior_pct": 1.8655,
+          "conversions": 38.0,
+          "conversions_prior": 101.0,
+          "cpl": 90.7176
+        }
+      ]
+    },
+    {
+      "id": "WEEK.campaigns",
+      "title": "Campaigns live in the reporting week",
+      "statement": "9 campaigns were live: C001 (Google Demo, Security), C016 (Google Content Download, Customer Proof), C022 (Google Demo, Speed), C038 (LinkedIn Demo, Speed), C043 (Google Demo, ROI), C048 (Meta Webinar, Speed), C067 (Google Demo, Customer Proof), C119 (LinkedIn Demo, Customer Proof), C123 (Meta Demo, Speed).",
+      "source": "daily_campaign_performance + campaign_summary",
+      "reliability": "final",
+      "caveats": [
+        "CTR baseline is each campaign's own prior 35 days."
+      ],
+      "data": [
+        {
+          "campaign_id": "C001",
+          "platform": "Google",
+          "objective": "Demo",
+          "theme": "Security",
+          "audience": "Law Firm - Mid-Market",
+          "region": "France",
+          "creative_id": "CR025",
+          "days_live_in_week": 7,
+          "spend": 1484.51,
+          "ctr_pct": 3.0211,
+          "ctr_baseline_pct": 3.025,
+          "ctr_vs_baseline_pct": -0.1267,
+          "conversions": 5,
+          "campaign_age_days": 55,
+          "end_date": "2026-06-30",
+          "source_flags": "Under-tested theme; Attribution immature",
+          "past_fatigue_point": false
+        },
+        {
+          "campaign_id": "C016",
+          "platform": "Google",
+          "objective": "Content Download",
+          "theme": "Customer Proof",
+          "audience": "In-House - Mid-Market",
+          "region": "US",
+          "creative_id": "CR017",
+          "days_live_in_week": 1,
+          "spend": 262.16,
+          "ctr_pct": 3.2697,
+          "ctr_baseline_pct": 3.3629,
+          "ctr_vs_baseline_pct": -2.7725,
+          "conversions": 7,
+          "campaign_age_days": 58,
+          "end_date": "2026-06-24",
+          "source_flags": "Attribution immature",
+          "past_fatigue_point": false
+        },
+        {
+          "campaign_id": "C022",
+          "platform": "Google",
+          "objective": "Demo",
+          "theme": "Speed",
+          "audience": "In-House - Enterprise",
+          "region": "UK",
+          "creative_id": "CR032",
+          "days_live_in_week": 2,
+          "spend": 2626.86,
+          "ctr_pct": 3.7312,
+          "ctr_baseline_pct": 3.7598,
+          "ctr_vs_baseline_pct": -0.7606,
+          "conversions": 20,
+          "campaign_age_days": 51,
+          "end_date": "2026-06-25",
+          "source_flags": "Attribution immature",
+          "past_fatigue_point": false
+        },
+        {
+          "campaign_id": "C038",
+          "platform": "LinkedIn",
+          "objective": "Demo",
+          "theme": "Speed",
+          "audience": "Law Firm - Enterprise",
+          "region": "US",
+          "creative_id": "CR027",
+          "days_live_in_week": 7,
+          "spend": 1989.9,
+          "ctr_pct": 1.0234,
+          "ctr_baseline_pct": 1.1354,
+          "ctr_vs_baseline_pct": -9.8635,
+          "conversions": 0,
+          "campaign_age_days": 47,
+          "end_date": "2026-06-30",
+          "source_flags": "Attribution immature",
+          "past_fatigue_point": false
+        },
+        {
+          "campaign_id": "C043",
+          "platform": "Google",
+          "objective": "Demo",
+          "theme": "ROI",
+          "audience": "Law Firm - Enterprise",
+          "region": "US",
+          "creative_id": "CR003",
+          "days_live_in_week": 1,
+          "spend": 336.15,
+          "ctr_pct": 3.4642,
+          "ctr_baseline_pct": 3.5882,
+          "ctr_vs_baseline_pct": -3.4549,
+          "conversions": 2,
+          "campaign_age_days": 56,
+          "end_date": "2026-06-24",
+          "source_flags": "Attribution immature",
+          "past_fatigue_point": false
+        },
+        {
+          "campaign_id": "C048",
+          "platform": "Meta",
+          "objective": "Webinar",
+          "theme": "Speed",
+          "audience": "Law Firm - Mid-Market",
+          "region": "DACH",
+          "creative_id": "CR029",
+          "days_live_in_week": 7,
+          "spend": 1561.87,
+          "ctr_pct": 1.7637,
+          "ctr_baseline_pct": 1.8252,
+          "ctr_vs_baseline_pct": -3.3693,
+          "conversions": 29,
+          "campaign_age_days": 47,
+          "end_date": "2026-06-30",
+          "source_flags": "High volume / low quality; Attribution immature",
+          "past_fatigue_point": true
+        },
+        {
+          "campaign_id": "C067",
+          "platform": "Google",
+          "objective": "Demo",
+          "theme": "Customer Proof",
+          "audience": "Law Firm - Enterprise",
+          "region": "US",
+          "creative_id": "CR015",
+          "days_live_in_week": 7,
+          "spend": 2743.59,
+          "ctr_pct": 3.1095,
+          "ctr_baseline_pct": 3.2805,
+          "ctr_vs_baseline_pct": -5.2148,
+          "conversions": 14,
+          "campaign_age_days": 47,
+          "end_date": "2026-06-30",
+          "source_flags": "Attribution immature",
+          "past_fatigue_point": false
+        },
+        {
+          "campaign_id": "C119",
+          "platform": "LinkedIn",
+          "objective": "Demo",
+          "theme": "Customer Proof",
+          "audience": "In-House - Mid-Market",
+          "region": "DACH",
+          "creative_id": "CR016",
+          "days_live_in_week": 7,
+          "spend": 4122.98,
+          "ctr_pct": 0.7561,
+          "ctr_baseline_pct": 0.9998,
+          "ctr_vs_baseline_pct": -24.3773,
+          "conversions": 0,
+          "campaign_age_days": 60,
+          "end_date": "2026-06-30",
+          "source_flags": "Attribution immature",
+          "past_fatigue_point": true
+        },
+        {
+          "campaign_id": "C123",
+          "platform": "Meta",
+          "objective": "Demo",
+          "theme": "Speed",
+          "audience": "In-House - Enterprise",
+          "region": "US",
+          "creative_id": "CR032",
+          "days_live_in_week": 7,
+          "spend": 1885.4,
+          "ctr_pct": 1.6908,
+          "ctr_baseline_pct": 1.8012,
+          "ctr_vs_baseline_pct": -6.1323,
+          "conversions": 9,
+          "campaign_age_days": 47,
+          "end_date": "2026-06-30",
+          "source_flags": "High volume / low quality; Attribution immature",
+          "past_fatigue_point": true
+        }
+      ]
+    },
+    {
+      "id": "WEEK.program_status",
+      "title": "The program is winding down",
+      "statement": "6 campaigns were still live on Jun 30 and 0 are scheduled to run past it. Weekly spend is $17,013, down 91% from the peak week of Mar 04 ($194,291, 50 campaigns). The 9 campaigns live this week were 7 Demo, 1 Content Download, 1 Webinar.",
+      "source": "daily_campaign_performance + campaign_summary",
+      "reliability": "final",
+      "caveats": [
+        "With nothing scheduled, the next set of launches is a clean slate. What gets tested next is also what gets funded next."
+      ],
+      "data": {
+        "live_on_as_of": [
+          "C001",
+          "C038",
+          "C048",
+          "C067",
+          "C119",
+          "C123"
+        ],
+        "scheduled_after_as_of": [],
+        "weekly_spend": [
+          {
+            "week_start": "2026-01-07",
+            "week_end": "2026-01-13",
+            "spend": 27419.26,
+            "campaigns": 11
+          },
+          {
+            "week_start": "2026-01-14",
+            "week_end": "2026-01-20",
+            "spend": 57498.9,
+            "campaigns": 15
+          },
+          {
+            "week_start": "2026-01-21",
+            "week_end": "2026-01-27",
+            "spend": 64789.12,
+            "campaigns": 17
+          },
+          {
+            "week_start": "2026-01-28",
+            "week_end": "2026-02-03",
+            "spend": 82926.08,
+            "campaigns": 25
+          },
+          {
+            "week_start": "2026-02-04",
+            "week_end": "2026-02-10",
+            "spend": 124782.95,
+            "campaigns": 36
+          },
+          {
+            "week_start": "2026-02-11",
+            "week_end": "2026-02-17",
+            "spend": 156867.45,
+            "campaigns": 43
+          },
+          {
+            "week_start": "2026-02-18",
+            "week_end": "2026-02-24",
+            "spend": 153719.26,
+            "campaigns": 44
+          },
+          {
+            "week_start": "2026-02-25",
+            "week_end": "2026-03-03",
+            "spend": 180350.48,
+            "campaigns": 50
+          },
+          {
+            "week_start": "2026-03-04",
+            "week_end": "2026-03-10",
+            "spend": 194291.04,
+            "campaigns": 50
+          },
+          {
+            "week_start": "2026-03-11",
+            "week_end": "2026-03-17",
+            "spend": 177502.62,
+            "campaigns": 50
+          },
+          {
+            "week_start": "2026-03-18",
+            "week_end": "2026-03-24",
+            "spend": 176771.03,
+            "campaigns": 48
+          },
+          {
+            "week_start": "2026-03-25",
+            "week_end": "2026-03-31",
+            "spend": 158837.71,
+            "campaigns": 45
+          },
+          {
+            "week_start": "2026-04-01",
+            "week_end": "2026-04-07",
+            "spend": 166392.93,
+            "campaigns": 46
+          },
+          {
+            "week_start": "2026-04-08",
+            "week_end": "2026-04-14",
+            "spend": 170594.74,
+            "campaigns": 49
+          },
+          {
+            "week_start": "2026-04-15",
+            "week_end": "2026-04-21",
+            "spend": 159644.03,
+            "campaigns": 47
+          },
+          {
+            "week_start": "2026-04-22",
+            "week_end": "2026-04-28",
+            "spend": 153679.94,
+            "campaigns": 43
+          },
+          {
+            "week_start": "2026-04-29",
+            "week_end": "2026-05-05",
+            "spend": 148044.74,
+            "campaigns": 45
+          },
+          {
+            "week_start": "2026-05-06",
+            "week_end": "2026-05-12",
+            "spend": 148071.21,
+            "campaigns": 46
+          },
+          {
+            "week_start": "2026-05-13",
+            "week_end": "2026-05-19",
+            "spend": 152292.46,
+            "campaigns": 44
+          },
+          {
+            "week_start": "2026-05-20",
+            "week_end": "2026-05-26",
+            "spend": 135820.33,
+            "campaigns": 41
+          },
+          {
+            "week_start": "2026-05-27",
+            "week_end": "2026-06-02",
+            "spend": 116019.33,
+            "campaigns": 36
+          },
+          {
+            "week_start": "2026-06-03",
+            "week_end": "2026-06-09",
+            "spend": 91233.25,
+            "campaigns": 30
+          },
+          {
+            "week_start": "2026-06-10",
+            "week_end": "2026-06-16",
+            "spend": 68795.69,
+            "campaigns": 23
+          },
+          {
+            "week_start": "2026-06-17",
+            "week_end": "2026-06-23",
+            "spend": 36139.88,
+            "campaigns": 14
+          },
+          {
+            "week_start": "2026-06-24",
+            "week_end": "2026-06-30",
+            "spend": 17013.42,
+            "campaigns": 9
+          }
+        ],
+        "peak_week": {
+          "week_start": "2026-03-04",
+          "week_end": "2026-03-10",
+          "spend": 194291.04,
+          "campaigns": 50
+        },
+        "objective_mix_this_week": {
+          "Demo": 7,
+          "Content Download": 1,
+          "Webinar": 1
+        }
+      }
+    },
+    {
+      "id": "BENCH.overall",
+      "title": "Benchmark population",
+      "statement": "Efficiency benchmarks use 114 campaigns with settled attribution ($2,816,960 of spend, 19,053 opportunities), blended $635 of pipeline per dollar and $148 per opportunity. 14 campaigns flagged immature are excluded.",
+      "source": "campaign_summary",
+      "reliability": "final",
+      "caveats": [
+        "Absolute pipeline-per-dollar values are synthetic. Read the ratios, not the dollars."
+      ],
+      "data": {
+        "spend": 2816959.83,
+        "impressions": 96483699.0,
+        "clicks": 2119596.0,
+        "conversions": 193724.0,
+        "qualified_leads": 83847.0,
+        "opportunities": 19053.0,
+        "pipeline": 1787555228.0,
+        "arr": 500440682.0,
+        "ctr_pct": 2.1968,
+        "cpc": 1.329,
+        "cvr_pct": 9.1397,
+        "cpl": 14.5411,
+        "ql_rate": 0.4328,
+        "cost_per_ql": 33.5964,
+        "opp_rate": 0.2272,
+        "cost_per_opp": 147.8486,
+        "pipeline_per_dollar": 634.5689,
+        "arr_per_dollar": 177.6528,
+        "campaigns": 114
+      }
+    },
+    {
+      "id": "SEG.platform",
+      "title": "Efficiency by platform",
+      "statement": "By platform, Google returns $1,307 of pipeline per dollar (1.86x comparable campaigns) on 31% of spend, while LinkedIn returns $25 (0.06x) on 31% of spend. Google is above benchmark in 3 of 3 objective cells with enough spend; LinkedIn is below in 3 of 3.",
+      "source": "campaign_summary",
+      "reliability": "observational",
+      "caveats": [
+        "Observational: campaigns were not randomized across segments. Use to decide what to test.",
+        "Absolute pipeline-per-dollar values are synthetic. Read the ratios, not the dollars.",
+        "adjusted_index compares each segment with campaigns on the same objective."
+      ],
+      "data": [
+        {
+          "platform": "Meta",
+          "campaigns": 38,
+          "spend": 1076042.09,
+          "spend_share": 0.382,
+          "pipeline": 633332214,
+          "pipeline_share": 0.3543,
+          "cpl": 9.8967,
+          "ql_rate": 0.2972,
+          "opp_rate": 0.2035,
+          "cost_per_opp": 163.6317,
+          "pipeline_per_dollar": 588.5757,
+          "arr_per_dollar": 165.2713,
+          "raw_index": 0.9275,
+          "adjusted_index": 0.7704,
+          "expected_pipeline": 822121219.5121,
+          "direction": "mixed",
+          "cells_evaluated": 3,
+          "cells_above_benchmark": 2,
+          "enough_data": true
+        },
+        {
+          "platform": "LinkedIn",
+          "campaigns": 41,
+          "spend": 874628.52,
+          "spend_share": 0.3105,
+          "pipeline": 22049093,
+          "pipeline_share": 0.0123,
+          "cpl": 97.5168,
+          "ql_rate": 0.4375,
+          "opp_rate": 0.0627,
+          "cost_per_opp": 3555.4005,
+          "pipeline_per_dollar": 25.2097,
+          "arr_per_dollar": 7.2004,
+          "raw_index": 0.0397,
+          "adjusted_index": 0.0617,
+          "expected_pipeline": 357073134.0051,
+          "direction": "below",
+          "cells_evaluated": 3,
+          "cells_above_benchmark": 0,
+          "enough_data": true
+        },
+        {
+          "platform": "Google",
+          "campaigns": 35,
+          "spend": 866289.22,
+          "spend_share": 0.3075,
+          "pipeline": 1132173921,
+          "pipeline_share": 0.6334,
+          "cpl": 11.3943,
+          "ql_rate": 0.6263,
+          "opp_rate": 0.2569,
+          "cost_per_opp": 70.8273,
+          "pipeline_per_dollar": 1306.9237,
+          "arr_per_dollar": 365.1253,
+          "raw_index": 2.0595,
+          "adjusted_index": 1.861,
+          "expected_pipeline": 608360874.4828,
+          "direction": "above",
+          "cells_evaluated": 3,
+          "cells_above_benchmark": 3,
+          "enough_data": true
+        }
+      ]
+    },
+    {
+      "id": "SEG.objective",
+      "title": "Efficiency by objective",
+      "statement": "By objective, Webinar returns $1,135 of pipeline per dollar (1.42x comparable campaigns) on 41% of spend, while Demo returns $246 (0.46x) on 49% of spend. Webinar is above benchmark in 3 of 3 platform cells with enough spend; Demo is below in 3 of 3.",
+      "source": "campaign_summary",
+      "reliability": "observational",
+      "caveats": [
+        "Observational: campaigns were not randomized across segments. Use to decide what to test.",
+        "Absolute pipeline-per-dollar values are synthetic. Read the ratios, not the dollars.",
+        "adjusted_index compares each segment with campaigns on the same platform."
+      ],
+      "data": [
+        {
+          "objective": "Demo",
+          "campaigns": 58,
+          "spend": 1393026.73,
+          "spend_share": 0.4945,
+          "pipeline": 342099772,
+          "pipeline_share": 0.1914,
+          "cpl": 26.4623,
+          "ql_rate": 0.4578,
+          "opp_rate": 0.18,
+          "cost_per_opp": 321.1219,
+          "pipeline_per_dollar": 245.5802,
+          "arr_per_dollar": 68.7779,
+          "raw_index": 0.387,
+          "adjusted_index": 0.4562,
+          "expected_pipeline": 749877540.3677,
+          "direction": "below",
+          "cells_evaluated": 3,
+          "cells_above_benchmark": 0,
+          "enough_data": true
+        },
+        {
+          "objective": "Webinar",
+          "campaigns": 38,
+          "spend": 1156549.83,
+          "spend_share": 0.4106,
+          "pipeline": 1312685909,
+          "pipeline_share": 0.7343,
+          "cpl": 10.0925,
+          "ql_rate": 0.4388,
+          "opp_rate": 0.2601,
+          "cost_per_opp": 88.4415,
+          "pipeline_per_dollar": 1135.0016,
+          "arr_per_dollar": 317.7093,
+          "raw_index": 1.7886,
+          "adjusted_index": 1.424,
+          "expected_pipeline": 921838733.4264,
+          "direction": "above",
+          "cells_evaluated": 3,
+          "cells_above_benchmark": 3,
+          "enough_data": true
+        },
+        {
+          "objective": "Content Download",
+          "campaigns": 18,
+          "spend": 267383.27,
+          "spend_share": 0.0949,
+          "pipeline": 132769547,
+          "pipeline_share": 0.0743,
+          "cpl": 10.0949,
+          "ql_rate": 0.3574,
+          "opp_rate": 0.173,
+          "cost_per_opp": 163.2376,
+          "pipeline_per_dollar": 496.5514,
+          "arr_per_dollar": 139.0684,
+          "raw_index": 0.7825,
+          "adjusted_index": 1.1462,
+          "expected_pipeline": 115838954.206,
+          "direction": "mixed",
+          "cells_evaluated": 3,
+          "cells_above_benchmark": 2,
+          "enough_data": true
+        }
+      ]
+    },
+    {
+      "id": "SEG.theme",
+      "title": "Efficiency by theme",
+      "statement": "By theme, ROI returns $902 of pipeline per dollar (1.29x comparable campaigns) on 20% of spend, while Security returns $550 (0.65x) on 6% of spend. ROI is above benchmark in 6 of 6 platform x objective cells with enough spend; Security is below in 4 of 4.",
+      "source": "campaign_summary",
+      "reliability": "observational",
+      "caveats": [
+        "Observational: campaigns were not randomized across segments. Use to decide what to test.",
+        "Absolute pipeline-per-dollar values are synthetic. Read the ratios, not the dollars.",
+        "adjusted_index compares each segment with campaigns on the same platform and objective."
+      ],
+      "data": [
+        {
+          "theme": "AI Productivity",
+          "campaigns": 23,
+          "spend": 832864.78,
+          "spend_share": 0.2957,
+          "pipeline": 572035057,
+          "pipeline_share": 0.32,
+          "cpl": 12.4879,
+          "ql_rate": 0.395,
+          "opp_rate": 0.2255,
+          "cost_per_opp": 140.2129,
+          "pipeline_per_dollar": 686.8282,
+          "arr_per_dollar": 192.4911,
+          "raw_index": 1.0824,
+          "adjusted_index": 0.9721,
+          "expected_pipeline": 588430931.3428,
+          "direction": "mixed",
+          "cells_evaluated": 5,
+          "cells_above_benchmark": 2,
+          "enough_data": true
+        },
+        {
+          "theme": "ROI",
+          "campaigns": 28,
+          "spend": 577027.59,
+          "spend_share": 0.2048,
+          "pipeline": 520766784,
+          "pipeline_share": 0.2913,
+          "cpl": 14.2811,
+          "ql_rate": 0.5057,
+          "opp_rate": 0.2674,
+          "cost_per_opp": 105.6053,
+          "pipeline_per_dollar": 902.4989,
+          "arr_per_dollar": 251.9482,
+          "raw_index": 1.4222,
+          "adjusted_index": 1.2866,
+          "expected_pipeline": 404769699.4975,
+          "direction": "above",
+          "cells_evaluated": 6,
+          "cells_above_benchmark": 6,
+          "enough_data": true
+        },
+        {
+          "theme": "Speed",
+          "campaigns": 20,
+          "spend": 505048.82,
+          "spend_share": 0.1793,
+          "pipeline": 194945742,
+          "pipeline_share": 0.1091,
+          "cpl": 21.1415,
+          "ql_rate": 0.4317,
+          "opp_rate": 0.1957,
+          "cost_per_opp": 250.272,
+          "pipeline_per_dollar": 385.9939,
+          "arr_per_dollar": 108.2886,
+          "raw_index": 0.6083,
+          "adjusted_index": 1.0027,
+          "expected_pipeline": 194411156.1755,
+          "direction": "mixed",
+          "cells_evaluated": 5,
+          "cells_above_benchmark": 3,
+          "enough_data": true
+        },
+        {
+          "theme": "Workflow Automation",
+          "campaigns": 22,
+          "spend": 484706.47,
+          "spend_share": 0.1721,
+          "pipeline": 309877309,
+          "pipeline_share": 0.1734,
+          "cpl": 13.7763,
+          "ql_rate": 0.431,
+          "opp_rate": 0.2116,
+          "cost_per_opp": 151.093,
+          "pipeline_per_dollar": 639.3092,
+          "arr_per_dollar": 179.3214,
+          "raw_index": 1.0075,
+          "adjusted_index": 0.9416,
+          "expected_pipeline": 329091002.8294,
+          "direction": "mixed",
+          "cells_evaluated": 7,
+          "cells_above_benchmark": 3,
+          "enough_data": true
+        },
+        {
+          "theme": "Customer Proof",
+          "campaigns": 14,
+          "spend": 260534.01,
+          "spend_share": 0.0925,
+          "pipeline": 103732666,
+          "pipeline_share": 0.058,
+          "cpl": 16.2377,
+          "ql_rate": 0.4087,
+          "opp_rate": 0.1992,
+          "cost_per_opp": 199.4901,
+          "pipeline_per_dollar": 398.154,
+          "arr_per_dollar": 111.9642,
+          "raw_index": 0.6274,
+          "adjusted_index": 0.7482,
+          "expected_pipeline": 138639301.8414,
+          "direction": "below",
+          "cells_evaluated": 4,
+          "cells_above_benchmark": 0,
+          "enough_data": true
+        },
+        {
+          "theme": "Security",
+          "campaigns": 7,
+          "spend": 156778.16,
+          "spend_share": 0.0557,
+          "pipeline": 86197670,
+          "pipeline_share": 0.0482,
+          "cpl": 13.6246,
+          "ql_rate": 0.4374,
+          "opp_rate": 0.2219,
+          "cost_per_opp": 140.3565,
+          "pipeline_per_dollar": 549.8066,
+          "arr_per_dollar": 152.8324,
+          "raw_index": 0.8664,
+          "adjusted_index": 0.652,
+          "expected_pipeline": 132213136.3135,
+          "direction": "below",
+          "cells_evaluated": 4,
+          "cells_above_benchmark": 0,
+          "enough_data": true
+        }
+      ]
+    },
+    {
+      "id": "SEG.audience",
+      "title": "Efficiency by audience",
+      "statement": "By audience, Law Firm - Enterprise returns $1,193 of pipeline per dollar (1.23x comparable campaigns) on 26% of spend, while In-House - Mid-Market returns $357 (0.70x) on 28% of spend. Law Firm - Enterprise is above benchmark in 5 of 5 platform x objective cells with enough spend; In-House - Mid-Market is below in 6 of 7.",
+      "source": "campaign_summary",
+      "reliability": "observational",
+      "caveats": [
+        "Observational: campaigns were not randomized across segments. Use to decide what to test.",
+        "Absolute pipeline-per-dollar values are synthetic. Read the ratios, not the dollars.",
+        "adjusted_index compares each segment with campaigns on the same platform and objective."
+      ],
+      "data": [
+        {
+          "audience": "In-House - Mid-Market",
+          "campaigns": 30,
+          "spend": 801573.61,
+          "spend_share": 0.2846,
+          "pipeline": 286177595,
+          "pipeline_share": 0.1601,
+          "cpl": 16.0443,
+          "ql_rate": 0.3753,
+          "opp_rate": 0.2076,
+          "cost_per_opp": 205.9542,
+          "pipeline_per_dollar": 357.0197,
+          "arr_per_dollar": 99.8344,
+          "raw_index": 0.5626,
+          "adjusted_index": 0.6995,
+          "expected_pipeline": 409126504.6175,
+          "direction": "mixed",
+          "cells_evaluated": 7,
+          "cells_above_benchmark": 1,
+          "enough_data": true
+        },
+        {
+          "audience": "Law Firm - Enterprise",
+          "campaigns": 23,
+          "spend": 721124.52,
+          "spend_share": 0.256,
+          "pipeline": 860395159,
+          "pipeline_share": 0.4813,
+          "cpl": 11.5194,
+          "ql_rate": 0.4812,
+          "opp_rate": 0.2587,
+          "cost_per_opp": 92.5112,
+          "pipeline_per_dollar": 1193.1298,
+          "arr_per_dollar": 333.1423,
+          "raw_index": 1.8802,
+          "adjusted_index": 1.2348,
+          "expected_pipeline": 696798064.4468,
+          "direction": "above",
+          "cells_evaluated": 5,
+          "cells_above_benchmark": 5,
+          "enough_data": true
+        },
+        {
+          "audience": "In-House - Enterprise",
+          "campaigns": 34,
+          "spend": 676957.49,
+          "spend_share": 0.2403,
+          "pipeline": 323127766,
+          "pipeline_share": 0.1808,
+          "cpl": 15.8501,
+          "ql_rate": 0.3682,
+          "opp_rate": 0.1905,
+          "cost_per_opp": 225.9538,
+          "pipeline_per_dollar": 477.3236,
+          "arr_per_dollar": 133.9742,
+          "raw_index": 0.7522,
+          "adjusted_index": 1.092,
+          "expected_pipeline": 295907187.0303,
+          "direction": "mixed",
+          "cells_evaluated": 7,
+          "cells_above_benchmark": 6,
+          "enough_data": true
+        },
+        {
+          "audience": "Law Firm - Mid-Market",
+          "campaigns": 27,
+          "spend": 617304.21,
+          "spend_share": 0.2191,
+          "pipeline": 317854708,
+          "pipeline_share": 0.1778,
+          "cpl": 16.0535,
+          "ql_rate": 0.5005,
+          "opp_rate": 0.2271,
+          "cost_per_opp": 141.2595,
+          "pipeline_per_dollar": 514.9077,
+          "arr_per_dollar": 144.9595,
+          "raw_index": 0.8114,
+          "adjusted_index": 0.824,
+          "expected_pipeline": 385723471.9054,
+          "direction": "mixed",
+          "cells_evaluated": 6,
+          "cells_above_benchmark": 1,
+          "enough_data": true
+        }
+      ]
+    },
+    {
+      "id": "SEG.region",
+      "title": "Efficiency by region",
+      "statement": "No region stands out once platform x objective is held constant: like-for-like indexes run from 0.93x (DACH) to 1.10x (UK). The raw spread of 0.52x to 1.18x comes from which platforms and offers each region was given.",
+      "source": "campaign_summary",
+      "reliability": "observational",
+      "caveats": [
+        "Observational: campaigns were not randomized across segments. Use to decide what to test.",
+        "Absolute pipeline-per-dollar values are synthetic. Read the ratios, not the dollars.",
+        "adjusted_index compares each segment with campaigns on the same platform and objective."
+      ],
+      "data": [
+        {
+          "region": "US",
+          "campaigns": 57,
+          "spend": 1519734.67,
+          "spend_share": 0.5395,
+          "pipeline": 1141967194,
+          "pipeline_share": 0.6388,
+          "cpl": 13.584,
+          "ql_rate": 0.463,
+          "opp_rate": 0.2381,
+          "cost_per_opp": 123.2151,
+          "pipeline_per_dollar": 751.4254,
+          "arr_per_dollar": 209.5914,
+          "raw_index": 1.1842,
+          "adjusted_index": 0.9778,
+          "expected_pipeline": 1167934743.0658,
+          "direction": "mixed",
+          "cells_evaluated": 8,
+          "cells_above_benchmark": 3,
+          "enough_data": true
+        },
+        {
+          "region": "UK",
+          "campaigns": 25,
+          "spend": 522056.21,
+          "spend_share": 0.1853,
+          "pipeline": 310807349,
+          "pipeline_share": 0.1739,
+          "cpl": 13.054,
+          "ql_rate": 0.3906,
+          "opp_rate": 0.2141,
+          "cost_per_opp": 156.1173,
+          "pipeline_per_dollar": 595.3523,
+          "arr_per_dollar": 167.1226,
+          "raw_index": 0.9382,
+          "adjusted_index": 1.1011,
+          "expected_pipeline": 282261688.1849,
+          "direction": "mixed",
+          "cells_evaluated": 7,
+          "cells_above_benchmark": 3,
+          "enough_data": true
+        },
+        {
+          "region": "DACH",
+          "campaigns": 19,
+          "spend": 459830.16,
+          "spend_share": 0.1632,
+          "pipeline": 152843824,
+          "pipeline_share": 0.0855,
+          "cpl": 26.4149,
+          "ql_rate": 0.4617,
+          "opp_rate": 0.1941,
+          "cost_per_opp": 294.7629,
+          "pipeline_per_dollar": 332.3919,
+          "arr_per_dollar": 94.5481,
+          "raw_index": 0.5238,
+          "adjusted_index": 0.9346,
+          "expected_pipeline": 163534865.9975,
+          "direction": "mixed",
+          "cells_evaluated": 5,
+          "cells_above_benchmark": 3,
+          "enough_data": true
+        },
+        {
+          "region": "France",
+          "campaigns": 13,
+          "spend": 315338.79,
+          "spend_share": 0.1119,
+          "pipeline": 181936861,
+          "pipeline_share": 0.1018,
+          "cpl": 12.8989,
+          "ql_rate": 0.3434,
+          "opp_rate": 0.2162,
+          "cost_per_opp": 173.7404,
+          "pipeline_per_dollar": 576.9568,
+          "arr_per_dollar": 162.3456,
+          "raw_index": 0.9092,
+          "adjusted_index": 1.0467,
+          "expected_pipeline": 173823930.7519,
+          "direction": "mixed",
+          "cells_evaluated": 4,
+          "cells_above_benchmark": 3,
+          "enough_data": true
+        }
+      ]
+    },
+    {
+      "id": "SEG.platform_objective",
+      "title": "Efficiency by platform and offer",
+      "statement": "Google Content Download: $1,216/$ on $25,639; Google Demo: $612/$ on $403,082; Google Webinar: $1,953/$ on $437,569; LinkedIn Content Download: $102/$ on $106,421; LinkedIn Demo: $5/$ on $638,266; LinkedIn Webinar: $61/$ on $129,942; Meta Content Download: $671/$ on $135,324; Meta Demo: $262/$ on $351,679; Meta Webinar: $765/$ on $589,039.",
+      "source": "campaign_summary",
+      "reliability": "observational",
+      "caveats": [
+        "Observational: campaigns were not randomized across segments. Use to decide what to test.",
+        "Absolute pipeline-per-dollar values are synthetic. Read the ratios, not the dollars."
+      ],
+      "data": [
+        {
+          "platform": "LinkedIn",
+          "objective": "Demo",
+          "campaigns": 27,
+          "spend": 638265.82,
+          "spend_share": 0.2266,
+          "opportunities": 49,
+          "cost_per_opp": 13025.8331,
+          "pipeline_per_dollar": 5.1592
+        },
+        {
+          "platform": "Meta",
+          "objective": "Webinar",
+          "campaigns": 16,
+          "spend": 589039.35,
+          "spend_share": 0.2091,
+          "opportunities": 4473,
+          "cost_per_opp": 131.6878,
+          "pipeline_per_dollar": 764.5443
+        },
+        {
+          "platform": "Google",
+          "objective": "Webinar",
+          "campaigns": 15,
+          "spend": 437568.54,
+          "spend_share": 0.1553,
+          "opportunities": 8531,
+          "cost_per_opp": 51.2916,
+          "pipeline_per_dollar": 1952.674
+        },
+        {
+          "platform": "Google",
+          "objective": "Demo",
+          "campaigns": 18,
+          "spend": 403081.99,
+          "spend_share": 0.1431,
+          "opportunities": 3223,
+          "cost_per_opp": 125.0642,
+          "pipeline_per_dollar": 611.6796
+        },
+        {
+          "platform": "Meta",
+          "objective": "Demo",
+          "campaigns": 13,
+          "spend": 351678.92,
+          "spend_share": 0.1248,
+          "opportunities": 1066,
+          "cost_per_opp": 329.9052,
+          "pipeline_per_dollar": 262.3125
+        },
+        {
+          "platform": "Meta",
+          "objective": "Content Download",
+          "campaigns": 9,
+          "spend": 135323.82,
+          "spend_share": 0.048,
+          "opportunities": 1037,
+          "cost_per_opp": 130.4955,
+          "pipeline_per_dollar": 670.5083
+        },
+        {
+          "platform": "LinkedIn",
+          "objective": "Webinar",
+          "campaigns": 7,
+          "spend": 129941.94,
+          "spend_share": 0.0461,
+          "opportunities": 73,
+          "cost_per_opp": 1780.0266,
+          "pipeline_per_dollar": 60.8773
+        },
+        {
+          "platform": "LinkedIn",
+          "objective": "Content Download",
+          "campaigns": 7,
+          "spend": 106420.76,
+          "spend_share": 0.0378,
+          "opportunities": 124,
+          "cost_per_opp": 858.2319,
+          "pipeline_per_dollar": 101.9128
+        },
+        {
+          "platform": "Google",
+          "objective": "Content Download",
+          "campaigns": 2,
+          "spend": 25638.69,
+          "spend_share": 0.0091,
+          "opportunities": 477,
+          "cost_per_opp": 53.7499,
+          "pipeline_per_dollar": 1216.4491
+        }
+      ]
+    },
+    {
+      "id": "FUNNEL.platform",
+      "title": "Where each platform's funnel leaks",
+      "statement": "Google: $11 per lead, 63% qualify, 26% of those become opportunities, $71 per opportunity; LinkedIn: $98 per lead, 44% qualify, 6% of those become opportunities, $3,555 per opportunity; Meta: $10 per lead, 30% qualify, 20% of those become opportunities, $164 per opportunity.",
+      "source": "campaign_summary",
+      "reliability": "observational",
+      "caveats": [
+        "Observational: campaigns were not randomized across segments. Use to decide what to test."
+      ],
+      "data": [
+        {
+          "platform": "Meta",
+          "campaigns": 38,
+          "spend": 1076042.09,
+          "spend_share": 0.382,
+          "pipeline": 633332214,
+          "pipeline_share": 0.3543,
+          "cpl": 9.8967,
+          "ql_rate": 0.2972,
+          "opp_rate": 0.2035,
+          "cost_per_opp": 163.6317,
+          "pipeline_per_dollar": 588.5757,
+          "arr_per_dollar": 165.2713,
+          "raw_index": 0.9275,
+          "adjusted_index": 0.7704,
+          "expected_pipeline": 822121219.5121,
+          "direction": "mixed",
+          "cells_evaluated": 3,
+          "cells_above_benchmark": 2,
+          "enough_data": true
+        },
+        {
+          "platform": "LinkedIn",
+          "campaigns": 41,
+          "spend": 874628.52,
+          "spend_share": 0.3105,
+          "pipeline": 22049093,
+          "pipeline_share": 0.0123,
+          "cpl": 97.5168,
+          "ql_rate": 0.4375,
+          "opp_rate": 0.0627,
+          "cost_per_opp": 3555.4005,
+          "pipeline_per_dollar": 25.2097,
+          "arr_per_dollar": 7.2004,
+          "raw_index": 0.0397,
+          "adjusted_index": 0.0617,
+          "expected_pipeline": 357073134.0051,
+          "direction": "below",
+          "cells_evaluated": 3,
+          "cells_above_benchmark": 0,
+          "enough_data": true
+        },
+        {
+          "platform": "Google",
+          "campaigns": 35,
+          "spend": 866289.22,
+          "spend_share": 0.3075,
+          "pipeline": 1132173921,
+          "pipeline_share": 0.6334,
+          "cpl": 11.3943,
+          "ql_rate": 0.6263,
+          "opp_rate": 0.2569,
+          "cost_per_opp": 70.8273,
+          "pipeline_per_dollar": 1306.9237,
+          "arr_per_dollar": 365.1253,
+          "raw_index": 2.0595,
+          "adjusted_index": 1.861,
+          "expected_pipeline": 608360874.4828,
+          "direction": "above",
+          "cells_evaluated": 3,
+          "cells_above_benchmark": 3,
+          "enough_data": true
+        }
+      ]
+    },
+    {
+      "id": "BENCH.immature_campaigns",
+      "title": "How far behind the immature campaigns are",
+      "statement": "The 14 campaigns flagged immature ($305,295 of spend) currently show 0.86x the pipeline of settled campaigns on the same platform and offer.",
+      "source": "campaign_summary",
+      "reliability": "provisional",
+      "caveats": [
+        "These campaigns stay out of benchmarks until their attribution settles."
+      ],
+      "data": {
+        "campaigns": [
+          "C001",
+          "C016",
+          "C022",
+          "C024",
+          "C034",
+          "C038",
+          "C043",
+          "C048",
+          "C052",
+          "C067",
+          "C079",
+          "C108",
+          "C119",
+          "C123"
+        ],
+        "spend": 305294.79,
+        "index_vs_settled": 0.8574
+      }
+    },
+    {
+      "id": "MIX.objective",
+      "title": "Offer mix shifted in the last eight weeks",
+      "statement": "Google Webinar went from 55% to 5% of platform spend; Google Demo went from 42% to 92% of platform spend (last 8 weeks versus everything earlier).",
+      "source": "daily_campaign_performance",
+      "reliability": "final",
+      "caveats": [],
+      "data": {
+        "recent_window_start": "2026-05-06",
+        "shifts": [
+          {
+            "platform": "Google",
+            "objective": "Content Download",
+            "earlier": 3.5096,
+            "recent": 3.6252,
+            "change_points": 0.1157
+          },
+          {
+            "platform": "Google",
+            "objective": "Demo",
+            "earlier": 41.9886,
+            "recent": 91.6373,
+            "change_points": 49.6487
+          },
+          {
+            "platform": "Google",
+            "objective": "Webinar",
+            "earlier": 54.5018,
+            "recent": 4.7374,
+            "change_points": -49.7644
+          },
+          {
+            "platform": "LinkedIn",
+            "objective": "Content Download",
+            "earlier": 8.1534,
+            "recent": 25.9276,
+            "change_points": 17.7742
+          },
+          {
+            "platform": "LinkedIn",
+            "objective": "Demo",
+            "earlier": 75.8466,
+            "recent": 68.4328,
+            "change_points": -7.4138
+          },
+          {
+            "platform": "LinkedIn",
+            "objective": "Webinar",
+            "earlier": 16.0,
+            "recent": 5.6396,
+            "change_points": -10.3603
+          },
+          {
+            "platform": "Meta",
+            "objective": "Content Download",
+            "earlier": 9.7465,
+            "recent": 23.6788,
+            "change_points": 13.9322
+          },
+          {
+            "platform": "Meta",
+            "objective": "Demo",
+            "earlier": 33.4287,
+            "recent": 28.8567,
+            "change_points": -4.572
+          },
+          {
+            "platform": "Meta",
+            "objective": "Webinar",
+            "earlier": 56.8248,
+            "recent": 47.4645,
+            "change_points": -9.3602
+          }
+        ],
+        "monthly_share_pct": [
+          {
+            "platform": "Google",
+            "month": "2026-01",
+            "Content Download": 0.0,
+            "Demo": 73.5313,
+            "Webinar": 26.4687
+          },
+          {
+            "platform": "Google",
+            "month": "2026-02",
+            "Content Download": 1.317,
+            "Demo": 58.5171,
+            "Webinar": 40.1659
+          },
+          {
+            "platform": "Google",
+            "month": "2026-03",
+            "Content Download": 7.358,
+            "Demo": 29.9004,
+            "Webinar": 62.7416
+          },
+          {
+            "platform": "Google",
+            "month": "2026-04",
+            "Content Download": 2.3429,
+            "Demo": 25.4244,
+            "Webinar": 72.2327
+          },
+          {
+            "platform": "Google",
+            "month": "2026-05",
+            "Content Download": 3.0889,
+            "Demo": 85.5942,
+            "Webinar": 11.3169
+          },
+          {
+            "platform": "Google",
+            "month": "2026-06",
+            "Content Download": 4.4806,
+            "Demo": 95.5194,
+            "Webinar": 0.0
+          },
+          {
+            "platform": "LinkedIn",
+            "month": "2026-01",
+            "Content Download": 14.5504,
+            "Demo": 70.1463,
+            "Webinar": 15.3033
+          },
+          {
+            "platform": "LinkedIn",
+            "month": "2026-02",
+            "Content Download": 7.3682,
+            "Demo": 74.4523,
+            "Webinar": 18.1795
+          },
+          {
+            "platform": "LinkedIn",
+            "month": "2026-03",
+            "Content Download": 3.9408,
+            "Demo": 78.1773,
+            "Webinar": 17.8818
+          },
+          {
+            "platform": "LinkedIn",
+            "month": "2026-04",
+            "Content Download": 11.0339,
+            "Demo": 76.8944,
+            "Webinar": 12.0717
+          },
+          {
+            "platform": "LinkedIn",
+            "month": "2026-05",
+            "Content Download": 25.2416,
+            "Demo": 66.6857,
+            "Webinar": 8.0727
+          },
+          {
+            "platform": "LinkedIn",
+            "month": "2026-06",
+            "Content Download": 24.9203,
+            "Demo": 73.491,
+            "Webinar": 1.5887
+          },
+          {
+            "platform": "Meta",
+            "month": "2026-01",
+            "Content Download": 13.119,
+            "Demo": 13.4617,
+            "Webinar": 73.4193
+          },
+          {
+            "platform": "Meta",
+            "month": "2026-02",
+            "Content Download": 8.7851,
+            "Demo": 21.5502,
+            "Webinar": 69.6647
+          },
+          {
+            "platform": "Meta",
+            "month": "2026-03",
+            "Content Download": 8.8233,
+            "Demo": 30.6914,
+            "Webinar": 60.4853
+          },
+          {
+            "platform": "Meta",
+            "month": "2026-04",
+            "Content Download": 10.8441,
+            "Demo": 42.6516,
+            "Webinar": 46.5043
+          },
+          {
+            "platform": "Meta",
+            "month": "2026-05",
+            "Content Download": 20.2418,
+            "Demo": 37.6213,
+            "Webinar": 42.1369
+          },
+          {
+            "platform": "Meta",
+            "month": "2026-06",
+            "Content Download": 26.3839,
+            "Demo": 11.2967,
+            "Webinar": 62.3194
+          }
+        ]
+      }
+    },
+    {
+      "id": "ZERO.opportunities",
+      "title": "Campaigns with zero opportunities",
+      "statement": "24 settled campaigns produced no opportunities on $385,683 of spend: LinkedIn 24 of 41 ($385,683). By offer: 18 Demo, 3 Content Download, 3 Webinar.",
+      "source": "campaign_summary",
+      "reliability": "final",
+      "caveats": [
+        "Platform attribution can under-credit channels that influence enterprise deals without capturing the last touch."
+      ],
+      "data": {
+        "by_platform": [
+          {
+            "platform": "LinkedIn",
+            "campaigns": 24,
+            "spend": 385682.87
+          }
+        ],
+        "campaign_ids": [
+          "C002",
+          "C011",
+          "C017",
+          "C026",
+          "C032",
+          "C035",
+          "C041",
+          "C047",
+          "C053",
+          "C059",
+          "C065",
+          "C074",
+          "C080",
+          "C086",
+          "C089",
+          "C092",
+          "C095",
+          "C098",
+          "C101",
+          "C104",
+          "C113",
+          "C116",
+          "C122",
+          "C128"
+        ],
+        "by_objective": {
+          "Demo": 18,
+          "Content Download": 3,
+          "Webinar": 3
+        }
+      }
+    },
+    {
+      "id": "FATIGUE.curve",
+      "title": "When creative wears out",
+      "statement": "Google CTR shows no decay with age; LinkedIn CTR holds for 7 weeks, then slips to 87% of its launch level in week 8 and 71% by week 10; Meta CTR holds for 6 weeks, then slips to 95% of its launch level in week 7 and 79% by week 9.",
+      "source": "daily_campaign_performance",
+      "reliability": "final",
+      "caveats": [
+        "Index = a campaign's CTR in that week of age divided by its own CTR in its first two weeks.",
+        "Measured within campaigns, so platform and audience mix cannot cause it (see DQ.creative_age)."
+      ],
+      "data": {
+        "curve": [
+          {
+            "platform": "Google",
+            "age_week": 1,
+            "campaigns": 43,
+            "clicks": 187477,
+            "expected_clicks": 187464.2122,
+            "spend": 164965.34,
+            "ctr_index": 1.0001,
+            "evaluated": true
+          },
+          {
+            "platform": "Google",
+            "age_week": 2,
+            "campaigns": 43,
+            "clicks": 188615,
+            "expected_clicks": 188627.7878,
+            "spend": 165097.42,
+            "ctr_index": 0.9999,
+            "evaluated": true
+          },
+          {
+            "platform": "Google",
+            "age_week": 3,
+            "campaigns": 43,
+            "clicks": 189324,
+            "expected_clicks": 190088.2023,
+            "spend": 167211.99,
+            "ctr_index": 0.996,
+            "evaluated": true
+          },
+          {
+            "platform": "Google",
+            "age_week": 4,
+            "campaigns": 43,
+            "clicks": 182375,
+            "expected_clicks": 185700.5461,
+            "spend": 163828.06,
+            "ctr_index": 0.9821,
+            "evaluated": true
+          },
+          {
+            "platform": "Google",
+            "age_week": 5,
+            "campaigns": 40,
+            "clicks": 156286,
+            "expected_clicks": 154939.7836,
+            "spend": 137626.51,
+            "ctr_index": 1.0087,
+            "evaluated": true
+          },
+          {
+            "platform": "Google",
+            "age_week": 6,
+            "campaigns": 32,
+            "clicks": 125540,
+            "expected_clicks": 125249.443,
+            "spend": 110833.28,
+            "ctr_index": 1.0023,
+            "evaluated": true
+          },
+          {
+            "platform": "Google",
+            "age_week": 7,
+            "campaigns": 28,
+            "clicks": 100519,
+            "expected_clicks": 102130.7256,
+            "spend": 89388.46,
+            "ctr_index": 0.9842,
+            "evaluated": true
+          },
+          {
+            "platform": "Google",
+            "age_week": 8,
+            "campaigns": 17,
+            "clicks": 57410,
+            "expected_clicks": 59324.1454,
+            "spend": 50400.2,
+            "ctr_index": 0.9677,
+            "evaluated": true
+          },
+          {
+            "platform": "Google",
+            "age_week": 9,
+            "campaigns": 8,
+            "clicks": 17768,
+            "expected_clicks": 18021.5269,
+            "spend": 14700.02,
+            "ctr_index": 0.9859,
+            "evaluated": true
+          },
+          {
+            "platform": "LinkedIn",
+            "age_week": 1,
+            "campaigns": 43,
+            "clicks": 24464,
+            "expected_clicks": 24363.8353,
+            "spend": 152819.72,
+            "ctr_index": 1.0041,
+            "evaluated": true
+          },
+          {
+            "platform": "LinkedIn",
+            "age_week": 2,
+            "campaigns": 43,
+            "clicks": 23934,
+            "expected_clicks": 24034.1647,
+            "spend": 151635.62,
+            "ctr_index": 0.9958,
+            "evaluated": true
+          },
+          {
+            "platform": "LinkedIn",
+            "age_week": 3,
+            "campaigns": 43,
+            "clicks": 23807,
+            "expected_clicks": 23815.7369,
+            "spend": 150116.8,
+            "ctr_index": 0.9996,
+            "evaluated": true
+          },
+          {
+            "platform": "LinkedIn",
+            "age_week": 4,
+            "campaigns": 40,
+            "clicks": 19784,
+            "expected_clicks": 19800.2155,
+            "spend": 124454.38,
+            "ctr_index": 0.9992,
+            "evaluated": true
+          },
+          {
+            "platform": "LinkedIn",
+            "age_week": 5,
+            "campaigns": 35,
+            "clicks": 17105,
+            "expected_clicks": 17039.0801,
+            "spend": 105253.83,
+            "ctr_index": 1.0039,
+            "evaluated": true
+          },
+          {
+            "platform": "LinkedIn",
+            "age_week": 6,
+            "campaigns": 28,
+            "clicks": 12979,
+            "expected_clicks": 13116.755,
+            "spend": 81888.09,
+            "ctr_index": 0.9895,
+            "evaluated": true
+          },
+          {
+            "platform": "LinkedIn",
+            "age_week": 7,
+            "campaigns": 24,
+            "clicks": 10044,
+            "expected_clicks": 10395.0296,
+            "spend": 64602.89,
+            "ctr_index": 0.9662,
+            "evaluated": true
+          },
+          {
+            "platform": "LinkedIn",
+            "age_week": 8,
+            "campaigns": 18,
+            "clicks": 7069,
+            "expected_clicks": 8103.6596,
+            "spend": 49668.05,
+            "ctr_index": 0.8723,
+            "evaluated": true
+          },
+          {
+            "platform": "LinkedIn",
+            "age_week": 9,
+            "campaigns": 13,
+            "clicks": 4253,
+            "expected_clicks": 5322.2709,
+            "spend": 32433.39,
+            "ctr_index": 0.7991,
+            "evaluated": true
+          },
+          {
+            "platform": "LinkedIn",
+            "age_week": 10,
+            "campaigns": 6,
+            "clicks": 1411,
+            "expected_clicks": 1993.7782,
+            "spend": 12187.98,
+            "ctr_index": 0.7077,
+            "evaluated": true
+          },
+          {
+            "platform": "Meta",
+            "age_week": 1,
+            "campaigns": 42,
+            "clicks": 162935,
+            "expected_clicks": 164392.3233,
+            "spend": 174964.39,
+            "ctr_index": 0.9911,
+            "evaluated": true
+          },
+          {
+            "platform": "Meta",
+            "age_week": 2,
+            "campaigns": 42,
+            "clicks": 165734,
+            "expected_clicks": 164276.6767,
+            "spend": 174824.13,
+            "ctr_index": 1.0089,
+            "evaluated": true
+          },
+          {
+            "platform": "Meta",
+            "age_week": 3,
+            "campaigns": 42,
+            "clicks": 163354,
+            "expected_clicks": 163692.017,
+            "spend": 173660.76,
+            "ctr_index": 0.9979,
+            "evaluated": true
+          },
+          {
+            "platform": "Meta",
+            "age_week": 4,
+            "campaigns": 40,
+            "clicks": 154856,
+            "expected_clicks": 155426.9473,
+            "spend": 165218.71,
+            "ctr_index": 0.9963,
+            "evaluated": true
+          },
+          {
+            "platform": "Meta",
+            "age_week": 5,
+            "campaigns": 34,
+            "clicks": 133175,
+            "expected_clicks": 134370.3123,
+            "spend": 141278.78,
+            "ctr_index": 0.9911,
+            "evaluated": true
+          },
+          {
+            "platform": "Meta",
+            "age_week": 6,
+            "campaigns": 29,
+            "clicks": 107769,
+            "expected_clicks": 108004.7387,
+            "spend": 113056.95,
+            "ctr_index": 0.9978,
+            "evaluated": true
+          },
+          {
+            "platform": "Meta",
+            "age_week": 7,
+            "campaigns": 21,
+            "clicks": 75161,
+            "expected_clicks": 79253.795,
+            "spend": 83271.7,
+            "ctr_index": 0.9484,
+            "evaluated": true
+          },
+          {
+            "platform": "Meta",
+            "age_week": 8,
+            "campaigns": 17,
+            "clicks": 49604,
+            "expected_clicks": 58035.04,
+            "spend": 60178.27,
+            "ctr_index": 0.8547,
+            "evaluated": true
+          },
+          {
+            "platform": "Meta",
+            "age_week": 9,
+            "campaigns": 10,
+            "clicks": 32847,
+            "expected_clicks": 41483.8999,
+            "spend": 42709.49,
+            "ctr_index": 0.7918,
+            "evaluated": true
+          },
+          {
+            "platform": "Meta",
+            "age_week": 10,
+            "campaigns": 4,
+            "clicks": 2562,
+            "expected_clicks": 3782.6515,
+            "spend": 3979.56,
+            "ctr_index": 0.6773,
+            "evaluated": false
+          }
+        ],
+        "onset": {
+          "Google": null,
+          "LinkedIn": {
+            "week": 8,
+            "day": 50,
+            "index_at_onset": 0.8723,
+            "last_week": 10,
+            "last_index": 0.7077
+          },
+          "Meta": {
+            "week": 7,
+            "day": 43,
+            "index_at_onset": 0.9484,
+            "last_week": 9,
+            "last_index": 0.7918
+          }
+        },
+        "exposure": [
+          {
+            "platform": "LinkedIn",
+            "campaigns_past_onset": 18,
+            "spend_past_onset": 94289.42,
+            "share_of_platform_spend": 0.1019,
+            "clicks_below_launch_rate": 2686.7087
+          },
+          {
+            "platform": "Meta",
+            "campaigns_past_onset": 21,
+            "spend_past_onset": 190139.02,
+            "share_of_platform_spend": 0.1678,
+            "clicks_below_launch_rate": 22381.3864
+          }
+        ]
+      }
+    },
+    {
+      "id": "SEASON.weekday",
+      "title": "Weekday pattern",
+      "statement": "Weekend spend per campaign-day runs at 65% of weekday spend, so comparisons use full 7-day windows.",
+      "source": "daily_campaign_performance",
+      "reliability": "final",
+      "caveats": [],
+      "data": {
+        "weekend_vs_weekday_spend_ratio": 0.6485
+      }
+    },
+    {
+      "id": "CREATIVE.gaps",
+      "title": "Unused creative and format gaps",
+      "statement": "1 active creative has never run: CR021 (Workflow Automation, Video, Law Firm). Format gaps: Security for In-House has no Carousel or Video; Security for Law Firm has no Carousel or Video.",
+      "source": "creative_library + campaign_summary",
+      "reliability": "final",
+      "caveats": [],
+      "data": {
+        "unused": [
+          {
+            "creative_id": "CR021",
+            "theme": "Workflow Automation",
+            "format": "Video",
+            "audience_group": "Law Firm"
+          }
+        ],
+        "format_gaps": [
+          {
+            "theme": "Security",
+            "audience_group": "In-House",
+            "format": [
+              "Static"
+            ],
+            "missing_formats": [
+              "Carousel",
+              "Video"
+            ]
+          },
+          {
+            "theme": "Security",
+            "audience_group": "Law Firm",
+            "format": [
+              "Static"
+            ],
+            "missing_formats": [
+              "Carousel",
+              "Video"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "CREATIVE.performance",
+      "title": "Creative performance, like for like",
+      "statement": "Against campaigns on the same platform and offer, CR001 (ROI Static, Law Firm) performs best at 1.45x and CR016 (Customer Proof Static, In-House) worst at 0.40x.",
+      "source": "campaign_summary + creative_library",
+      "reliability": "observational",
+      "caveats": [
+        "Observational: campaigns were not randomized across segments. Use to decide what to test.",
+        "Most creatives ran in only a few campaigns. Treat single-creative differences as leads, not conclusions."
+      ],
+      "data": [
+        {
+          "creative_id": "CR018",
+          "theme": "Customer Proof",
+          "format": "Video",
+          "audience_group": "In-House",
+          "campaigns": 1,
+          "spend": 18398.38,
+          "pipeline_per_dollar": 221.3803,
+          "adjusted_index": 2.1723,
+          "direction": "insufficient",
+          "exposure_days": 23.0
+        },
+        {
+          "creative_id": "CR005",
+          "theme": "ROI",
+          "format": "Carousel",
+          "audience_group": "In-House",
+          "campaigns": 2,
+          "spend": 22136.39,
+          "pipeline_per_dollar": 579.1482,
+          "adjusted_index": 1.5162,
+          "direction": "insufficient",
+          "exposure_days": 79.0
+        },
+        {
+          "creative_id": "CR001",
+          "theme": "ROI",
+          "format": "Static",
+          "audience_group": "Law Firm",
+          "campaigns": 7,
+          "spend": 177645.13,
+          "pipeline_per_dollar": 1145.1441,
+          "adjusted_index": 1.4534,
+          "direction": "mixed",
+          "exposure_days": 116.0
+        },
+        {
+          "creative_id": "CR003",
+          "theme": "ROI",
+          "format": "Video",
+          "audience_group": "Law Firm",
+          "campaigns": 3,
+          "spend": 62427.62,
+          "pipeline_per_dollar": 444.7548,
+          "adjusted_index": 1.2715,
+          "direction": "above",
+          "exposure_days": 165.0
+        },
+        {
+          "creative_id": "CR031",
+          "theme": "Speed",
+          "format": "Carousel",
+          "audience_group": "In-House",
+          "campaigns": 2,
+          "spend": 60103.47,
+          "pipeline_per_dollar": 725.7131,
+          "adjusted_index": 1.2202,
+          "direction": "above",
+          "exposure_days": 68.0
+        },
+        {
+          "creative_id": "CR004",
+          "theme": "ROI",
+          "format": "Static",
+          "audience_group": "In-House",
+          "campaigns": 7,
+          "spend": 81103.18,
+          "pipeline_per_dollar": 489.1596,
+          "adjusted_index": 1.2014,
+          "direction": "mixed",
+          "exposure_days": 155.0
+        },
+        {
+          "creative_id": "CR002",
+          "theme": "ROI",
+          "format": "Carousel",
+          "audience_group": "Law Firm",
+          "campaigns": 7,
+          "spend": 208953.47,
+          "pipeline_per_dollar": 1096.5798,
+          "adjusted_index": 1.1951,
+          "direction": "mixed",
+          "exposure_days": 152.0
+        },
+        {
+          "creative_id": "CR015",
+          "theme": "Customer Proof",
+          "format": "Video",
+          "audience_group": "Law Firm",
+          "campaigns": 1,
+          "spend": 30793.36,
+          "pipeline_per_dollar": 308.3346,
+          "adjusted_index": 1.1754,
+          "direction": "above",
+          "exposure_days": 120.0
+        },
+        {
+          "creative_id": "CR007",
+          "theme": "AI Productivity",
+          "format": "Static",
+          "audience_group": "Law Firm",
+          "campaigns": 3,
+          "spend": 151287.61,
+          "pipeline_per_dollar": 796.7678,
+          "adjusted_index": 1.14,
+          "direction": "above",
+          "exposure_days": 121.0
+        },
+        {
+          "creative_id": "CR029",
+          "theme": "Speed",
+          "format": "Video",
+          "audience_group": "Law Firm",
+          "campaigns": 1,
+          "spend": 16341.49,
+          "pipeline_per_dollar": 1384.8048,
+          "adjusted_index": 1.1384,
+          "direction": "insufficient",
+          "exposure_days": 122.0
+        },
+        {
+          "creative_id": "CR012",
+          "theme": "AI Productivity",
+          "format": "Video",
+          "audience_group": "In-House",
+          "campaigns": 4,
+          "spend": 114463.92,
+          "pipeline_per_dollar": 501.6437,
+          "adjusted_index": 1.0996,
+          "direction": "above",
+          "exposure_days": 139.0
+        },
+        {
+          "creative_id": "CR008",
+          "theme": "AI Productivity",
+          "format": "Carousel",
+          "audience_group": "Law Firm",
+          "campaigns": 5,
+          "spend": 164067.21,
+          "pipeline_per_dollar": 1385.1639,
+          "adjusted_index": 1.0893,
+          "direction": "mixed",
+          "exposure_days": 109.0
+        },
+        {
+          "creative_id": "CR019",
+          "theme": "Workflow Automation",
+          "format": "Static",
+          "audience_group": "Law Firm",
+          "campaigns": 3,
+          "spend": 67454.9,
+          "pipeline_per_dollar": 829.9586,
+          "adjusted_index": 1.0295,
+          "direction": "mixed",
+          "exposure_days": 91.0
+        },
+        {
+          "creative_id": "CR027",
+          "theme": "Speed",
+          "format": "Static",
+          "audience_group": "Law Firm",
+          "campaigns": 5,
+          "spend": 117814.47,
+          "pipeline_per_dollar": 836.2868,
+          "adjusted_index": 0.988,
+          "direction": "mixed",
+          "exposure_days": 172.0
+        },
+        {
+          "creative_id": "CR020",
+          "theme": "Workflow Automation",
+          "format": "Carousel",
+          "audience_group": "Law Firm",
+          "campaigns": 4,
+          "spend": 104048.7,
+          "pipeline_per_dollar": 561.744,
+          "adjusted_index": 0.9757,
+          "direction": "mixed",
+          "exposure_days": 144.0
+        },
+        {
+          "creative_id": "CR023",
+          "theme": "Workflow Automation",
+          "format": "Carousel",
+          "audience_group": "In-House",
+          "campaigns": 6,
+          "spend": 154973.28,
+          "pipeline_per_dollar": 779.9129,
+          "adjusted_index": 0.9304,
+          "direction": "mixed",
+          "exposure_days": 157.0
+        },
+        {
+          "creative_id": "CR024",
+          "theme": "Workflow Automation",
+          "format": "Video",
+          "audience_group": "In-House",
+          "campaigns": 4,
+          "spend": 105893.62,
+          "pipeline_per_dollar": 573.8036,
+          "adjusted_index": 0.8894,
+          "direction": "below",
+          "exposure_days": 168.0
+        },
+        {
+          "creative_id": "CR032",
+          "theme": "Speed",
+          "format": "Video",
+          "audience_group": "In-House",
+          "campaigns": 5,
+          "spend": 90818.83,
+          "pipeline_per_dollar": 159.3572,
+          "adjusted_index": 0.8436,
+          "direction": "mixed",
+          "exposure_days": 154.0
+        },
+        {
+          "creative_id": "CR022",
+          "theme": "Workflow Automation",
+          "format": "Static",
+          "audience_group": "In-House",
+          "campaigns": 5,
+          "spend": 52335.97,
+          "pipeline_per_dollar": 263.9867,
+          "adjusted_index": 0.8332,
+          "direction": "insufficient",
+          "exposure_days": 108.0
+        },
+        {
+          "creative_id": "CR013",
+          "theme": "Customer Proof",
+          "format": "Static",
+          "audience_group": "Law Firm",
+          "campaigns": 3,
+          "spend": 44154.76,
+          "pipeline_per_dollar": 569.7916,
+          "adjusted_index": 0.8268,
+          "direction": "insufficient",
+          "exposure_days": 52.0
+        },
+        {
+          "creative_id": "CR006",
+          "theme": "ROI",
+          "format": "Video",
+          "audience_group": "In-House",
+          "campaigns": 2,
+          "spend": 24761.8,
+          "pipeline_per_dollar": 320.8863,
+          "adjusted_index": 0.8136,
+          "direction": "insufficient",
+          "exposure_days": 60.0
+        },
+        {
+          "creative_id": "CR030",
+          "theme": "Speed",
+          "format": "Static",
+          "audience_group": "In-House",
+          "campaigns": 5,
+          "spend": 184803.89,
+          "pipeline_per_dollar": 45.1128,
+          "adjusted_index": 0.7819,
+          "direction": "mixed",
+          "exposure_days": 153.0
+        },
+        {
+          "creative_id": "CR011",
+          "theme": "AI Productivity",
+          "format": "Carousel",
+          "audience_group": "In-House",
+          "campaigns": 5,
+          "spend": 197210.86,
+          "pipeline_per_dollar": 509.0911,
+          "adjusted_index": 0.7693,
+          "direction": "mixed",
+          "exposure_days": 145.0
+        },
+        {
+          "creative_id": "CR025",
+          "theme": "Security",
+          "format": "Static",
+          "audience_group": "Law Firm",
+          "campaigns": 2,
+          "spend": 18127.37,
+          "pipeline_per_dollar": 493.0403,
+          "adjusted_index": 0.7544,
+          "direction": "insufficient",
+          "exposure_days": 135.0
+        },
+        {
+          "creative_id": "CR010",
+          "theme": "AI Productivity",
+          "format": "Static",
+          "audience_group": "In-House",
+          "campaigns": 4,
+          "spend": 122937.15,
+          "pipeline_per_dollar": 167.3097,
+          "adjusted_index": 0.7461,
+          "direction": "below",
+          "exposure_days": 126.0
+        },
+        {
+          "creative_id": "CR009",
+          "theme": "AI Productivity",
+          "format": "Video",
+          "audience_group": "Law Firm",
+          "campaigns": 2,
+          "spend": 82898.03,
+          "pipeline_per_dollar": 553.0529,
+          "adjusted_index": 0.719,
+          "direction": "below",
+          "exposure_days": 64.0
+        },
+        {
+          "creative_id": "CR017",
+          "theme": "Customer Proof",
+          "format": "Carousel",
+          "audience_group": "In-House",
+          "campaigns": 4,
+          "spend": 80740.54,
+          "pipeline_per_dollar": 293.8122,
+          "adjusted_index": 0.6995,
+          "direction": "below",
+          "exposure_days": 134.0
+        },
+        {
+          "creative_id": "CR014",
+          "theme": "Customer Proof",
+          "format": "Carousel",
+          "audience_group": "Law Firm",
+          "campaigns": 2,
+          "spend": 57247.94,
+          "pipeline_per_dollar": 659.0711,
+          "adjusted_index": 0.6815,
+          "direction": "below",
+          "exposure_days": 88.0
+        },
+        {
+          "creative_id": "CR028",
+          "theme": "Speed",
+          "format": "Carousel",
+          "audience_group": "Law Firm",
+          "campaigns": 2,
+          "spend": 35166.67,
+          "pipeline_per_dollar": 209.3388,
+          "adjusted_index": 0.6546,
+          "direction": "below",
+          "exposure_days": 48.0
+        },
+        {
+          "creative_id": "CR026",
+          "theme": "Security",
+          "format": "Static",
+          "audience_group": "In-House",
+          "campaigns": 5,
+          "spend": 138650.79,
+          "pipeline_per_dollar": 557.2283,
+          "adjusted_index": 0.6419,
+          "direction": "below",
+          "exposure_days": 105.0
+        },
+        {
+          "creative_id": "CR016",
+          "theme": "Customer Proof",
+          "format": "Static",
+          "audience_group": "In-House",
+          "campaigns": 3,
+          "spend": 29199.03,
+          "pipeline_per_dollar": 121.68,
+          "adjusted_index": 0.3957,
+          "direction": "insufficient",
+          "exposure_days": 104.0
+        }
+      ]
+    },
+    {
+      "id": "THEME.by_audience",
+      "title": "Which message works for which audience",
+      "statement": "Strongest pairings against comparable campaigns: ROI for In-House - Enterprise (1.58x), ROI for Law Firm - Enterprise (1.52x), AI Productivity for Law Firm - Enterprise (1.15x). Weakest: Workflow Automation for Law Firm - Mid-Market (0.69x), Customer Proof for Law Firm - Mid-Market (0.67x), Customer Proof for In-House - Mid-Market (0.64x).",
+      "source": "campaign_summary",
+      "reliability": "observational",
+      "caveats": [
+        "Observational: campaigns were not randomized across segments. Use to decide what to test.",
+        "Only pairings with at least 3 campaigns and $25,000 of spend are named."
+      ],
+      "data": [
+        {
+          "theme": "AI Productivity",
+          "audience": "In-House - Enterprise",
+          "campaigns": 7,
+          "spend": 199054.22,
+          "pipeline_per_dollar": 385.2546,
+          "adjusted_index": 1.1303,
+          "direction": "mixed"
+        },
+        {
+          "theme": "AI Productivity",
+          "audience": "In-House - Mid-Market",
+          "campaigns": 6,
+          "spend": 235557.71,
+          "pipeline_per_dollar": 431.7432,
+          "adjusted_index": 0.714,
+          "direction": "below"
+        },
+        {
+          "theme": "AI Productivity",
+          "audience": "Law Firm - Enterprise",
+          "campaigns": 5,
+          "spend": 218964.85,
+          "pipeline_per_dollar": 1384.7684,
+          "adjusted_index": 1.1514,
+          "direction": "above"
+        },
+        {
+          "theme": "AI Productivity",
+          "audience": "Law Firm - Mid-Market",
+          "campaigns": 5,
+          "spend": 179288.0,
+          "pipeline_per_dollar": 504.3978,
+          "adjusted_index": 0.7878,
+          "direction": "below"
+        },
+        {
+          "theme": "Customer Proof",
+          "audience": "In-House - Enterprise",
+          "campaigns": 2,
+          "spend": 25201.73,
+          "pipeline_per_dollar": 161.6174,
+          "adjusted_index": 2.1323,
+          "direction": "insufficient"
+        },
+        {
+          "theme": "Customer Proof",
+          "audience": "In-House - Mid-Market",
+          "campaigns": 6,
+          "spend": 103136.22,
+          "pipeline_per_dollar": 264.4609,
+          "adjusted_index": 0.6364,
+          "direction": "below"
+        },
+        {
+          "theme": "Customer Proof",
+          "audience": "Law Firm - Enterprise",
+          "campaigns": 2,
+          "spend": 49178.14,
+          "pipeline_per_dollar": 452.4979,
+          "adjusted_index": 1.1516,
+          "direction": "above"
+        },
+        {
+          "theme": "Customer Proof",
+          "audience": "Law Firm - Mid-Market",
+          "campaigns": 4,
+          "spend": 83017.92,
+          "pipeline_per_dollar": 603.8591,
+          "adjusted_index": 0.6725,
+          "direction": "below"
+        },
+        {
+          "theme": "ROI",
+          "audience": "In-House - Enterprise",
+          "campaigns": 6,
+          "spend": 67636.75,
+          "pipeline_per_dollar": 479.1049,
+          "adjusted_index": 1.5754,
+          "direction": "mixed"
+        },
+        {
+          "theme": "ROI",
+          "audience": "In-House - Mid-Market",
+          "campaigns": 5,
+          "spend": 60364.62,
+          "pipeline_per_dollar": 464.399,
+          "adjusted_index": 0.9139,
+          "direction": "insufficient"
+        },
+        {
+          "theme": "ROI",
+          "audience": "Law Firm - Enterprise",
+          "campaigns": 7,
+          "spend": 254685.69,
+          "pipeline_per_dollar": 1321.2218,
+          "adjusted_index": 1.5202,
+          "direction": "above"
+        },
+        {
+          "theme": "ROI",
+          "audience": "Law Firm - Mid-Market",
+          "campaigns": 10,
+          "spend": 194340.53,
+          "pipeline_per_dollar": 637.1915,
+          "adjusted_index": 0.9369,
+          "direction": "mixed"
+        },
+        {
+          "theme": "Security",
+          "audience": "In-House - Enterprise",
+          "campaigns": 3,
+          "spend": 64331.42,
+          "pipeline_per_dollar": 336.3863,
+          "adjusted_index": 0.8625,
+          "direction": "below"
+        },
+        {
+          "theme": "Security",
+          "audience": "In-House - Mid-Market",
+          "campaigns": 2,
+          "spend": 74319.37,
+          "pipeline_per_dollar": 748.3909,
+          "adjusted_index": 0.5838,
+          "direction": "below"
+        },
+        {
+          "theme": "Security",
+          "audience": "Law Firm - Enterprise",
+          "campaigns": 1,
+          "spend": 8830.17,
+          "pipeline_per_dollar": 42.9365,
+          "adjusted_index": 0.7053,
+          "direction": "insufficient"
+        },
+        {
+          "theme": "Security",
+          "audience": "Law Firm - Mid-Market",
+          "campaigns": 1,
+          "spend": 9297.2,
+          "pipeline_per_dollar": 920.5338,
+          "adjusted_index": 0.7567,
+          "direction": "insufficient"
+        },
+        {
+          "theme": "Speed",
+          "audience": "In-House - Enterprise",
+          "campaigns": 7,
+          "spend": 162025.36,
+          "pipeline_per_dollar": 358.0163,
+          "adjusted_index": 1.0938,
+          "direction": "mixed"
+        },
+        {
+          "theme": "Speed",
+          "audience": "In-House - Mid-Market",
+          "campaigns": 5,
+          "spend": 173700.83,
+          "pipeline_per_dollar": 48.473,
+          "adjusted_index": 0.7993,
+          "direction": "mixed"
+        },
+        {
+          "theme": "Speed",
+          "audience": "Law Firm - Enterprise",
+          "campaigns": 4,
+          "spend": 85423.0,
+          "pipeline_per_dollar": 1152.8237,
+          "adjusted_index": 0.9892,
+          "direction": "above"
+        },
+        {
+          "theme": "Speed",
+          "audience": "Law Firm - Mid-Market",
+          "campaigns": 4,
+          "spend": 83899.63,
+          "pipeline_per_dollar": 358.0535,
+          "adjusted_index": 0.96,
+          "direction": "below"
+        },
+        {
+          "theme": "Workflow Automation",
+          "audience": "In-House - Enterprise",
+          "campaigns": 9,
+          "spend": 158708.01,
+          "pipeline_per_dollar": 821.1,
+          "adjusted_index": 1.0224,
+          "direction": "above"
+        },
+        {
+          "theme": "Workflow Automation",
+          "audience": "In-House - Mid-Market",
+          "campaigns": 6,
+          "spend": 154494.86,
+          "pipeline_per_dollar": 421.5587,
+          "adjusted_index": 0.7457,
+          "direction": "below"
+        },
+        {
+          "theme": "Workflow Automation",
+          "audience": "Law Firm - Enterprise",
+          "campaigns": 4,
+          "spend": 104042.67,
+          "pipeline_per_dollar": 957.0446,
+          "adjusted_index": 1.0743,
+          "direction": "above"
+        },
+        {
+          "theme": "Workflow Automation",
+          "audience": "Law Firm - Mid-Market",
+          "campaigns": 3,
+          "spend": 67460.93,
+          "pipeline_per_dollar": 220.2762,
+          "adjusted_index": 0.6879,
+          "direction": "below"
+        }
+      ]
+    },
+    {
+      "id": "EXP.E001",
+      "title": "Experiment E001: ROI vs productivity messaging",
+      "statement": "E001 (ROI vs productivity messaging, Meta): Win +18% on Qualified pipeline per $ over 28 days, n=410. Rated trusted. Campaign data agrees: ROI returns 1.47x the pipeline per dollar of AI Productivity in settled campaigns on Meta, holding objective constant (10 vs 8 campaigns). Same question as E014.",
+      "source": "experiment_history + campaign_summary",
+      "reliability": "final",
+      "caveats": [],
+      "data": {
+        "experiment_id": "E001",
+        "platform": "Meta",
+        "start_date": "2026-04-01",
+        "variable_tested": "Headline",
+        "hypothesis": "ROI vs productivity messaging",
+        "theme": "ROI",
+        "logged_result": "Win",
+        "logged_lift_pct": 18,
+        "logged_confidence": "High",
+        "runtime_days": 28,
+        "sample_size": 410,
+        "primary_metric": "Qualified pipeline per $",
+        "notes": "ROI messaging consistently stronger, especially enterprise.",
+        "parsed": {
+          "dimension": "theme",
+          "a": "ROI",
+          "b": "AI Productivity",
+          "scope": {}
+        },
+        "comparison_key": "theme:AI Productivity|ROI",
+        "tier": "trusted",
+        "reasons": [],
+        "usable_as_evidence": true,
+        "overturned": false,
+        "observed": {
+          "verdict": "agrees",
+          "ratio_a_over_b": 1.4705,
+          "comparison": {
+            "dimension": "theme",
+            "scope": {
+              "platform": "Meta",
+              "audience_group": "all"
+            },
+            "held_constant": [
+              "objective"
+            ],
+            "a": {
+              "value": "ROI",
+              "campaigns": 10,
+              "spend": 215721.89,
+              "pipeline_per_dollar": 761.6567,
+              "adjusted_index": 1.347
+            },
+            "b": {
+              "value": "AI Productivity",
+              "campaigns": 8,
+              "spend": 407726.83,
+              "pipeline_per_dollar": 604.1522,
+              "adjusted_index": 0.916
+            },
+            "ratio_a_over_b": 1.4705
+          },
+          "detail": "ROI returns 1.47x the pipeline per dollar of AI Productivity in settled campaigns on Meta, holding objective constant (10 vs 8 campaigns)."
+        },
+        "replicates": [
+          "E014"
+        ]
+      }
+    },
+    {
+      "id": "EXP.E002",
+      "title": "Experiment E002: Video vs static for In-House",
+      "statement": "E002 (Video vs static for In-House, Meta): Win +14% on Opportunity rate over 35 days, n=360. Rated directional because notes describe LinkedIn but the test is logged on Meta. Campaign data agrees: Video returns 1.26x the pipeline per dollar of Static in settled campaigns on Meta for In-House audiences, holding objective constant (7 vs 10 campaigns). Same question as E012.",
+      "source": "experiment_history + campaign_summary",
+      "reliability": "observational",
+      "caveats": [],
+      "data": {
+        "experiment_id": "E002",
+        "platform": "Meta",
+        "start_date": "2026-01-22",
+        "variable_tested": "Creative format",
+        "hypothesis": "Video vs static for In-House",
+        "theme": "AI Productivity",
+        "logged_result": "Win",
+        "logged_lift_pct": 14,
+        "logged_confidence": "High",
+        "runtime_days": 35,
+        "sample_size": 360,
+        "primary_metric": "Opportunity rate",
+        "notes": "LinkedIn video performs well for in-house audiences.",
+        "parsed": {
+          "dimension": "format",
+          "a": "Video",
+          "b": "Static",
+          "scope": {
+            "audience_group": "In-House"
+          }
+        },
+        "comparison_key": "format:Static|Video",
+        "tier": "directional",
+        "reasons": [
+          "notes describe LinkedIn but the test is logged on Meta"
+        ],
+        "usable_as_evidence": true,
+        "overturned": false,
+        "observed": {
+          "verdict": "agrees",
+          "ratio_a_over_b": 1.2635,
+          "comparison": {
+            "dimension": "format",
+            "scope": {
+              "platform": "Meta",
+              "audience_group": "In-House"
+            },
+            "held_constant": [
+              "objective"
+            ],
+            "a": {
+              "value": "Video",
+              "campaigns": 7,
+              "spend": 166677.73,
+              "pipeline_per_dollar": 437.2211,
+              "adjusted_index": 1.1388
+            },
+            "b": {
+              "value": "Static",
+              "campaigns": 10,
+              "spend": 138032.34,
+              "pipeline_per_dollar": 516.9307,
+              "adjusted_index": 0.9013
+            },
+            "ratio_a_over_b": 1.2635
+          },
+          "detail": "Video returns 1.26x the pipeline per dollar of Static in settled campaigns on Meta for In-House audiences, holding objective constant (7 vs 10 campaigns)."
+        },
+        "replicates": [
+          "E012"
+        ]
+      }
+    },
+    {
+      "id": "EXP.E003",
+      "title": "Experiment E003: Webinar vs content download",
+      "statement": "E003 (Webinar vs content download, LinkedIn): Win +22% on ARR per $ over 42 days, n=180. Rated directional because logged confidence is Medium. Campaign data disagrees: Webinar returns 0.60x the pipeline per dollar of Content Download in settled campaigns on LinkedIn (7 vs 7 campaigns).",
+      "source": "experiment_history + campaign_summary",
+      "reliability": "observational",
+      "caveats": [],
+      "data": {
+        "experiment_id": "E003",
+        "platform": "LinkedIn",
+        "start_date": "2026-04-25",
+        "variable_tested": "Offer",
+        "hypothesis": "Webinar vs content download",
+        "theme": "Customer Proof",
+        "logged_result": "Win",
+        "logged_lift_pct": 22,
+        "logged_confidence": "Medium",
+        "runtime_days": 42,
+        "sample_size": 180,
+        "primary_metric": "ARR per $",
+        "notes": "Lower CTR but stronger downstream revenue.",
+        "parsed": {
+          "dimension": "objective",
+          "a": "Webinar",
+          "b": "Content Download",
+          "scope": {}
+        },
+        "comparison_key": "objective:Content Download|Webinar",
+        "tier": "directional",
+        "reasons": [
+          "logged confidence is Medium"
+        ],
+        "usable_as_evidence": true,
+        "overturned": false,
+        "observed": {
+          "verdict": "disagrees",
+          "ratio_a_over_b": 0.5973,
+          "comparison": {
+            "dimension": "objective",
+            "scope": {
+              "platform": "LinkedIn",
+              "audience_group": "all"
+            },
+            "held_constant": [],
+            "a": {
+              "value": "Webinar",
+              "campaigns": 7,
+              "spend": 129941.94,
+              "pipeline_per_dollar": 60.8773,
+              "adjusted_index": 2.4148
+            },
+            "b": {
+              "value": "Content Download",
+              "campaigns": 7,
+              "spend": 106420.76,
+              "pipeline_per_dollar": 101.9128,
+              "adjusted_index": 4.0426
+            },
+            "ratio_a_over_b": 0.5973
+          },
+          "detail": "Webinar returns 0.60x the pipeline per dollar of Content Download in settled campaigns on LinkedIn (7 vs 7 campaigns)."
+        },
+        "replicates": []
+      }
+    },
+    {
+      "id": "EXP.E004",
+      "title": "Experiment E004: Talk to Sales vs Book Demo",
+      "statement": "E004 (Talk to Sales vs Book Demo, Meta): Neutral +2% on Demo conversion rate over 31 days, n=520. Rated directional because primary metric 'Demo conversion rate' is a proxy, not a business outcome. Campaign data disagrees: Talk to Sales returns 0.63x the pipeline per dollar of Book Demo in settled campaigns on Meta, holding objective constant (7 vs 6 campaigns).",
+      "source": "experiment_history + campaign_summary",
+      "reliability": "observational",
+      "caveats": [],
+      "data": {
+        "experiment_id": "E004",
+        "platform": "Meta",
+        "start_date": "2026-04-24",
+        "variable_tested": "CTA",
+        "hypothesis": "Talk to Sales vs Book Demo",
+        "theme": "ROI",
+        "logged_result": "Neutral",
+        "logged_lift_pct": 2,
+        "logged_confidence": "High",
+        "runtime_days": 31,
+        "sample_size": 520,
+        "primary_metric": "Demo conversion rate",
+        "notes": "No meaningful difference.",
+        "parsed": {
+          "dimension": "cta",
+          "a": "Talk to Sales",
+          "b": "Book Demo",
+          "scope": {}
+        },
+        "comparison_key": "cta:Book Demo|Talk to Sales",
+        "tier": "directional",
+        "reasons": [
+          "primary metric 'Demo conversion rate' is a proxy, not a business outcome"
+        ],
+        "usable_as_evidence": true,
+        "overturned": false,
+        "observed": {
+          "verdict": "disagrees",
+          "ratio_a_over_b": 0.6262,
+          "comparison": {
+            "dimension": "cta",
+            "scope": {
+              "platform": "Meta",
+              "audience_group": "all"
+            },
+            "held_constant": [
+              "objective"
+            ],
+            "a": {
+              "value": "Talk to Sales",
+              "campaigns": 7,
+              "spend": 186967.62,
+              "pipeline_per_dollar": 205.0057,
+              "adjusted_index": 0.7815
+            },
+            "b": {
+              "value": "Book Demo",
+              "campaigns": 6,
+              "spend": 164711.3,
+              "pipeline_per_dollar": 327.3629,
+              "adjusted_index": 1.248
+            },
+            "ratio_a_over_b": 0.6262
+          },
+          "detail": "Talk to Sales returns 0.63x the pipeline per dollar of Book Demo in settled campaigns on Meta, holding objective constant (7 vs 6 campaigns)."
+        },
+        "replicates": []
+      }
+    },
+    {
+      "id": "EXP.E005",
+      "title": "Experiment E005: Stock photo vs product UI",
+      "statement": "E005 (Stock photo vs product UI, Meta): Loss -16% on Qualified lead rate over 24 days, n=300. Rated trusted.",
+      "source": "experiment_history + campaign_summary",
+      "reliability": "final",
+      "caveats": [],
+      "data": {
+        "experiment_id": "E005",
+        "platform": "Meta",
+        "start_date": "2026-03-22",
+        "variable_tested": "Creative concept",
+        "hypothesis": "Stock photo vs product UI",
+        "theme": "Workflow Automation",
+        "logged_result": "Loss",
+        "logged_lift_pct": -16,
+        "logged_confidence": "High",
+        "runtime_days": 24,
+        "sample_size": 300,
+        "primary_metric": "Qualified lead rate",
+        "notes": "Stock photos underperform product-oriented creative.",
+        "parsed": null,
+        "comparison_key": "stock photo vs product ui",
+        "tier": "trusted",
+        "reasons": [],
+        "usable_as_evidence": true,
+        "overturned": false,
+        "observed": {
+          "verdict": "not observable",
+          "detail": "The arms are not a field in campaign data."
+        },
+        "replicates": []
+      }
+    },
+    {
+      "id": "EXP.E006",
+      "title": "Experiment E006: Speed messaging vs ROI",
+      "statement": "E006 (Speed messaging vs ROI, Meta): Loss -11% on Pipeline per $ over 21 days, n=210. Rated directional because logged confidence is Medium. Campaign data agrees: Speed returns 0.78x the pipeline per dollar of ROI in settled campaigns on Meta, holding objective constant (5 vs 10 campaigns).",
+      "source": "experiment_history + campaign_summary",
+      "reliability": "observational",
+      "caveats": [],
+      "data": {
+        "experiment_id": "E006",
+        "platform": "Meta",
+        "start_date": "2026-04-03",
+        "variable_tested": "Headline",
+        "hypothesis": "Speed messaging vs ROI",
+        "theme": "Speed",
+        "logged_result": "Loss",
+        "logged_lift_pct": -11,
+        "logged_confidence": "Medium",
+        "runtime_days": 21,
+        "sample_size": 210,
+        "primary_metric": "Pipeline per $",
+        "notes": "Speed is weaker for enterprise.",
+        "parsed": {
+          "dimension": "theme",
+          "a": "Speed",
+          "b": "ROI",
+          "scope": {}
+        },
+        "comparison_key": "theme:ROI|Speed",
+        "tier": "directional",
+        "reasons": [
+          "logged confidence is Medium"
+        ],
+        "usable_as_evidence": true,
+        "overturned": false,
+        "observed": {
+          "verdict": "agrees",
+          "ratio_a_over_b": 0.7787,
+          "comparison": {
+            "dimension": "theme",
+            "scope": {
+              "platform": "Meta",
+              "audience_group": "all"
+            },
+            "held_constant": [
+              "objective"
+            ],
+            "a": {
+              "value": "Speed",
+              "campaigns": 5,
+              "spend": 129040.72,
+              "pipeline_per_dollar": 487.2353,
+              "adjusted_index": 1.0489
+            },
+            "b": {
+              "value": "ROI",
+              "campaigns": 10,
+              "spend": 215721.89,
+              "pipeline_per_dollar": 761.6567,
+              "adjusted_index": 1.347
+            },
+            "ratio_a_over_b": 0.7787
+          },
+          "detail": "Speed returns 0.78x the pipeline per dollar of ROI in settled campaigns on Meta, holding objective constant (5 vs 10 campaigns)."
+        },
+        "replicates": []
+      }
+    },
+    {
+      "id": "EXP.E007",
+      "title": "Experiment E007: Broad legal vs role-targeted",
+      "statement": "E007 (Broad legal vs role-targeted, Meta): Loss -9% on Qualified lead rate over 18 days, n=160. Rated directional because logged confidence is Medium.",
+      "source": "experiment_history + campaign_summary",
+      "reliability": "observational",
+      "caveats": [],
+      "data": {
+        "experiment_id": "E007",
+        "platform": "Meta",
+        "start_date": "2026-04-05",
+        "variable_tested": "Audience",
+        "hypothesis": "Broad legal vs role-targeted",
+        "theme": "AI Productivity",
+        "logged_result": "Loss",
+        "logged_lift_pct": -9,
+        "logged_confidence": "Medium",
+        "runtime_days": 18,
+        "sample_size": 160,
+        "primary_metric": "Qualified lead rate",
+        "notes": "Broad targeting creates cheaper but lower-quality leads.",
+        "parsed": null,
+        "comparison_key": "broad legal vs role-targeted",
+        "tier": "directional",
+        "reasons": [
+          "logged confidence is Medium"
+        ],
+        "usable_as_evidence": true,
+        "overturned": false,
+        "observed": {
+          "verdict": "not observable",
+          "detail": "The arms are not a field in campaign data."
+        },
+        "replicates": []
+      }
+    },
+    {
+      "id": "EXP.E008",
+      "title": "Experiment E008: Carousel vs static",
+      "statement": "E008 (Carousel vs static, Meta): Neutral +3% on Opportunity rate over 20 days, n=145. Rated directional because logged confidence is Medium. Campaign data agrees: Carousel returns 0.92x the pipeline per dollar of Static in settled campaigns on Meta, holding objective constant (13 vs 15 campaigns).",
+      "source": "experiment_history + campaign_summary",
+      "reliability": "observational",
+      "caveats": [],
+      "data": {
+        "experiment_id": "E008",
+        "platform": "Meta",
+        "start_date": "2026-04-28",
+        "variable_tested": "Creative format",
+        "hypothesis": "Carousel vs static",
+        "theme": "Customer Proof",
+        "logged_result": "Neutral",
+        "logged_lift_pct": 3,
+        "logged_confidence": "Medium",
+        "runtime_days": 20,
+        "sample_size": 145,
+        "primary_metric": "Opportunity rate",
+        "notes": "No clear winner.",
+        "parsed": {
+          "dimension": "format",
+          "a": "Carousel",
+          "b": "Static",
+          "scope": {}
+        },
+        "comparison_key": "format:Carousel|Static",
+        "tier": "directional",
+        "reasons": [
+          "logged confidence is Medium"
+        ],
+        "usable_as_evidence": true,
+        "overturned": false,
+        "observed": {
+          "verdict": "agrees",
+          "ratio_a_over_b": 0.9234,
+          "comparison": {
+            "dimension": "format",
+            "scope": {
+              "platform": "Meta",
+              "audience_group": "all"
+            },
+            "held_constant": [
+              "objective"
+            ],
+            "a": {
+              "value": "Carousel",
+              "campaigns": 13,
+              "spend": 509407.41,
+              "pipeline_per_dollar": 602.3381,
+              "adjusted_index": 0.9499
+            },
+            "b": {
+              "value": "Static",
+              "campaigns": 15,
+              "spend": 336828.36,
+              "pipeline_per_dollar": 645.3545,
+              "adjusted_index": 1.0287
+            },
+            "ratio_a_over_b": 0.9234
+          },
+          "detail": "Carousel returns 0.92x the pipeline per dollar of Static in settled campaigns on Meta, holding objective constant (13 vs 15 campaigns)."
+        },
+        "replicates": []
+      }
+    },
+    {
+      "id": "EXP.E009",
+      "title": "Experiment E009: Customer proof vs productivity",
+      "statement": "E009 (Customer proof vs productivity, Meta): Win +12% on Pipeline per $ over 30 days, n=330. Rated trusted. Campaign data disagrees: Customer Proof returns 0.81x the pipeline per dollar of AI Productivity in settled campaigns on Meta, holding objective constant (5 vs 8 campaigns).",
+      "source": "experiment_history + campaign_summary",
+      "reliability": "final",
+      "caveats": [],
+      "data": {
+        "experiment_id": "E009",
+        "platform": "Meta",
+        "start_date": "2026-03-25",
+        "variable_tested": "Headline",
+        "hypothesis": "Customer proof vs productivity",
+        "theme": "Customer Proof",
+        "logged_result": "Win",
+        "logged_lift_pct": 12,
+        "logged_confidence": "High",
+        "runtime_days": 30,
+        "sample_size": 330,
+        "primary_metric": "Pipeline per $",
+        "notes": "Strong for law firm enterprise.",
+        "parsed": {
+          "dimension": "theme",
+          "a": "Customer Proof",
+          "b": "AI Productivity",
+          "scope": {}
+        },
+        "comparison_key": "theme:AI Productivity|Customer Proof",
+        "tier": "trusted",
+        "reasons": [],
+        "usable_as_evidence": true,
+        "overturned": false,
+        "observed": {
+          "verdict": "disagrees",
+          "ratio_a_over_b": 0.8134,
+          "comparison": {
+            "dimension": "theme",
+            "scope": {
+              "platform": "Meta",
+              "audience_group": "all"
+            },
+            "held_constant": [
+              "objective"
+            ],
+            "a": {
+              "value": "Customer Proof",
+              "campaigns": 5,
+              "spend": 129813.24,
+              "pipeline_per_dollar": 334.3979,
+              "adjusted_index": 0.7451
+            },
+            "b": {
+              "value": "AI Productivity",
+              "campaigns": 8,
+              "spend": 407726.83,
+              "pipeline_per_dollar": 604.1522,
+              "adjusted_index": 0.916
+            },
+            "ratio_a_over_b": 0.8134
+          },
+          "detail": "Customer Proof returns 0.81x the pipeline per dollar of AI Productivity in settled campaigns on Meta, holding objective constant (5 vs 8 campaigns)."
+        },
+        "replicates": []
+      }
+    },
+    {
+      "id": "EXP.E010",
+      "title": "Experiment E010: Max conversions vs target CPA",
+      "statement": "E010 (Max conversions vs target CPA, Google): Win +8% on Qualified pipeline per $ over 26 days, n=240. Rated directional because logged confidence is Medium.",
+      "source": "experiment_history + campaign_summary",
+      "reliability": "observational",
+      "caveats": [],
+      "data": {
+        "experiment_id": "E010",
+        "platform": "Google",
+        "start_date": "2026-02-12",
+        "variable_tested": "Bid strategy",
+        "hypothesis": "Max conversions vs target CPA",
+        "theme": "ROI",
+        "logged_result": "Win",
+        "logged_lift_pct": 8,
+        "logged_confidence": "Medium",
+        "runtime_days": 26,
+        "sample_size": 240,
+        "primary_metric": "Qualified pipeline per $",
+        "notes": "Promising, but requires budget guardrails.",
+        "parsed": null,
+        "comparison_key": "max conversions vs target cpa",
+        "tier": "directional",
+        "reasons": [
+          "logged confidence is Medium"
+        ],
+        "usable_as_evidence": true,
+        "overturned": false,
+        "observed": {
+          "verdict": "not observable",
+          "detail": "The arms are not a field in campaign data."
+        },
+        "replicates": []
+      }
+    },
+    {
+      "id": "EXP.E011",
+      "title": "Experiment E011: Security messaging vs workflow",
+      "statement": "E011 (Security messaging vs workflow, Google) is logged as Inconclusive +9% but is not a valid read: ran 3 days (minimum 14); sample of 18 (minimum 100); primary metric 'CTR' is a proxy, not a business outcome; logged confidence is Low.",
+      "source": "experiment_history + campaign_summary",
+      "reliability": "data_quality",
+      "caveats": [
+        "Rejected experiments may not be cited as support for any recommendation."
+      ],
+      "data": {
+        "experiment_id": "E011",
+        "platform": "Google",
+        "start_date": "2026-04-15",
+        "variable_tested": "Headline",
+        "hypothesis": "Security messaging vs workflow",
+        "theme": "Security",
+        "logged_result": "Inconclusive",
+        "logged_lift_pct": 9,
+        "logged_confidence": "Low",
+        "runtime_days": 3,
+        "sample_size": 18,
+        "primary_metric": "CTR",
+        "notes": "False winner: only three days and insufficient sample.",
+        "parsed": {
+          "dimension": "theme",
+          "a": "Security",
+          "b": "Workflow Automation",
+          "scope": {}
+        },
+        "comparison_key": "theme:Security|Workflow Automation",
+        "tier": "rejected",
+        "reasons": [
+          "ran 3 days (minimum 14)",
+          "sample of 18 (minimum 100)",
+          "primary metric 'CTR' is a proxy, not a business outcome",
+          "logged confidence is Low"
+        ],
+        "usable_as_evidence": false,
+        "overturned": false,
+        "observed": {
+          "verdict": "no claim",
+          "ratio_a_over_b": 0.6857,
+          "comparison": {
+            "dimension": "theme",
+            "scope": {
+              "platform": "Google",
+              "audience_group": "all"
+            },
+            "held_constant": [
+              "objective"
+            ],
+            "a": {
+              "value": "Security",
+              "campaigns": 3,
+              "spend": 66462.12,
+              "pipeline_per_dollar": 1004.3464,
+              "adjusted_index": 0.6274
+            },
+            "b": {
+              "value": "Workflow Automation",
+              "campaigns": 8,
+              "spend": 211723.51,
+              "pipeline_per_dollar": 966.6265,
+              "adjusted_index": 0.915
+            },
+            "ratio_a_over_b": 0.6857
+          },
+          "detail": "Security returns 0.69x the pipeline per dollar of Workflow Automation in settled campaigns on Google, holding objective constant (3 vs 8 campaigns)."
+        },
+        "replicates": []
+      }
+    },
+    {
+      "id": "EXP.E012",
+      "title": "Experiment E012: Video vs static for Meta",
+      "statement": "E012 (Video vs static for Meta, Meta) is logged as Win +21% but is not a valid read: ran 4 days (minimum 14); sample of 24 (minimum 100); primary metric 'CTR' is a proxy, not a business outcome; logged confidence is Low. Same question as E002.",
+      "source": "experiment_history + campaign_summary",
+      "reliability": "data_quality",
+      "caveats": [
+        "Rejected experiments may not be cited as support for any recommendation."
+      ],
+      "data": {
+        "experiment_id": "E012",
+        "platform": "Meta",
+        "start_date": "2026-04-20",
+        "variable_tested": "Creative format",
+        "hypothesis": "Video vs static for Meta",
+        "theme": "AI Productivity",
+        "logged_result": "Win",
+        "logged_lift_pct": 21,
+        "logged_confidence": "Low",
+        "runtime_days": 4,
+        "sample_size": 24,
+        "primary_metric": "CTR",
+        "notes": "False winner: too little data and no pipeline maturity.",
+        "parsed": {
+          "dimension": "format",
+          "a": "Video",
+          "b": "Static",
+          "scope": {
+            "platform": "Meta"
+          }
+        },
+        "comparison_key": "format:Static|Video",
+        "tier": "rejected",
+        "reasons": [
+          "ran 4 days (minimum 14)",
+          "sample of 24 (minimum 100)",
+          "primary metric 'CTR' is a proxy, not a business outcome",
+          "logged confidence is Low"
+        ],
+        "usable_as_evidence": false,
+        "overturned": true,
+        "observed": {
+          "verdict": "unclear",
+          "ratio_a_over_b": 1.0714,
+          "comparison": {
+            "dimension": "format",
+            "scope": {
+              "platform": "Meta",
+              "audience_group": "all"
+            },
+            "held_constant": [
+              "objective"
+            ],
+            "a": {
+              "value": "Video",
+              "campaigns": 10,
+              "spend": 229806.32,
+              "pipeline_per_dollar": 474.848,
+              "adjusted_index": 1.1021
+            },
+            "b": {
+              "value": "Static",
+              "campaigns": 15,
+              "spend": 336828.36,
+              "pipeline_per_dollar": 645.3545,
+              "adjusted_index": 1.0287
+            },
+            "ratio_a_over_b": 1.0714
+          },
+          "detail": "Video returns 1.07x the pipeline per dollar of Static in settled campaigns on Meta, holding objective constant (10 vs 15 campaigns)."
+        },
+        "replicates": [
+          "E002"
+        ]
+      }
+    },
+    {
+      "id": "EXP.E013",
+      "title": "Experiment E013: Demo vs webinar",
+      "statement": "E013 (Demo vs webinar, Google) is logged as Win +15% but is not a valid read: ran 5 days (minimum 14); sample of 31 (minimum 100); primary metric 'Lead conversion rate' is a proxy, not a business outcome; logged confidence is Low. Campaign data disagrees: Demo returns 0.31x the pipeline per dollar of Webinar in settled campaigns on Google (18 vs 15 campaigns).",
+      "source": "experiment_history + campaign_summary",
+      "reliability": "data_quality",
+      "caveats": [
+        "Rejected experiments may not be cited as support for any recommendation."
+      ],
+      "data": {
+        "experiment_id": "E013",
+        "platform": "Google",
+        "start_date": "2026-05-03",
+        "variable_tested": "Offer",
+        "hypothesis": "Demo vs webinar",
+        "theme": "ROI",
+        "logged_result": "Win",
+        "logged_lift_pct": 15,
+        "logged_confidence": "Low",
+        "runtime_days": 5,
+        "sample_size": 31,
+        "primary_metric": "Lead conversion rate",
+        "notes": "False winner: downstream attribution incomplete.",
+        "parsed": {
+          "dimension": "objective",
+          "a": "Demo",
+          "b": "Webinar",
+          "scope": {}
+        },
+        "comparison_key": "objective:Demo|Webinar",
+        "tier": "rejected",
+        "reasons": [
+          "ran 5 days (minimum 14)",
+          "sample of 31 (minimum 100)",
+          "primary metric 'Lead conversion rate' is a proxy, not a business outcome",
+          "logged confidence is Low"
+        ],
+        "usable_as_evidence": false,
+        "overturned": true,
+        "observed": {
+          "verdict": "disagrees",
+          "ratio_a_over_b": 0.3133,
+          "comparison": {
+            "dimension": "objective",
+            "scope": {
+              "platform": "Google",
+              "audience_group": "all"
+            },
+            "held_constant": [],
+            "a": {
+              "value": "Demo",
+              "campaigns": 18,
+              "spend": 403081.99,
+              "pipeline_per_dollar": 611.6796,
+              "adjusted_index": 0.468
+            },
+            "b": {
+              "value": "Webinar",
+              "campaigns": 15,
+              "spend": 437568.54,
+              "pipeline_per_dollar": 1952.674,
+              "adjusted_index": 1.4941
+            },
+            "ratio_a_over_b": 0.3133
+          },
+          "detail": "Demo returns 0.31x the pipeline per dollar of Webinar in settled campaigns on Google (18 vs 15 campaigns)."
+        },
+        "replicates": []
+      }
+    },
+    {
+      "id": "EXP.E014",
+      "title": "Experiment E014: ROI vs productivity messaging - repeat",
+      "statement": "E014 (ROI vs productivity messaging - repeat, Google): Win +17% on Qualified pipeline per $ over 29 days, n=390. Rated trusted. Campaign data agrees: ROI returns 1.24x the pipeline per dollar of AI Productivity in settled campaigns on Google, holding objective constant (8 vs 8 campaigns). Same question as E001.",
+      "source": "experiment_history + campaign_summary",
+      "reliability": "final",
+      "caveats": [],
+      "data": {
+        "experiment_id": "E014",
+        "platform": "Google",
+        "start_date": "2026-04-20",
+        "variable_tested": "Headline",
+        "hypothesis": "ROI vs productivity messaging - repeat",
+        "theme": "ROI",
+        "logged_result": "Win",
+        "logged_lift_pct": 17,
+        "logged_confidence": "High",
+        "runtime_days": 29,
+        "sample_size": 390,
+        "primary_metric": "Qualified pipeline per $",
+        "notes": "Duplicate confirmatory test.",
+        "parsed": {
+          "dimension": "theme",
+          "a": "ROI",
+          "b": "AI Productivity",
+          "scope": {}
+        },
+        "comparison_key": "theme:AI Productivity|ROI",
+        "tier": "trusted",
+        "reasons": [],
+        "usable_as_evidence": true,
+        "overturned": false,
+        "observed": {
+          "verdict": "agrees",
+          "ratio_a_over_b": 1.2395,
+          "comparison": {
+            "dimension": "theme",
+            "scope": {
+              "platform": "Google",
+              "audience_group": "all"
+            },
+            "held_constant": [
+              "objective"
+            ],
+            "a": {
+              "value": "ROI",
+              "campaigns": 8,
+              "spend": 212235.14,
+              "pipeline_per_dollar": 1667.8743,
+              "adjusted_index": 1.264
+            },
+            "b": {
+              "value": "AI Productivity",
+              "campaigns": 8,
+              "spend": 236889.35,
+              "pipeline_per_dollar": 1365.6141,
+              "adjusted_index": 1.0197
+            },
+            "ratio_a_over_b": 1.2395
+          },
+          "detail": "ROI returns 1.24x the pipeline per dollar of AI Productivity in settled campaigns on Google, holding objective constant (8 vs 8 campaigns)."
+        },
+        "replicates": [
+          "E001"
+        ]
+      }
+    },
+    {
+      "id": "EXP.E015",
+      "title": "Experiment E015: Register vs Save Your Seat",
+      "statement": "E015 (Register vs Save Your Seat, LinkedIn): Neutral +1% on Registration rate over 27 days, n=270. Rated directional because primary metric 'Registration rate' is a proxy, not a business outcome. Campaign data agrees: Register returns 1.02x the pipeline per dollar of Save Your Seat in settled campaigns across all platforms, holding platform and objective constant (23 vs 15 campaigns).",
+      "source": "experiment_history + campaign_summary",
+      "reliability": "observational",
+      "caveats": [],
+      "data": {
+        "experiment_id": "E015",
+        "platform": "LinkedIn",
+        "start_date": "2026-05-11",
+        "variable_tested": "CTA",
+        "hypothesis": "Register vs Save Your Seat",
+        "theme": "Customer Proof",
+        "logged_result": "Neutral",
+        "logged_lift_pct": 1,
+        "logged_confidence": "High",
+        "runtime_days": 27,
+        "sample_size": 270,
+        "primary_metric": "Registration rate",
+        "notes": "No meaningful difference.",
+        "parsed": {
+          "dimension": "cta",
+          "a": "Register",
+          "b": "Save Your Seat",
+          "scope": {}
+        },
+        "comparison_key": "cta:Register|Save Your Seat",
+        "tier": "directional",
+        "reasons": [
+          "primary metric 'Registration rate' is a proxy, not a business outcome"
+        ],
+        "usable_as_evidence": true,
+        "overturned": false,
+        "observed": {
+          "verdict": "agrees",
+          "ratio_a_over_b": 1.0237,
+          "comparison": {
+            "dimension": "cta",
+            "scope": {
+              "platform": "all",
+              "audience_group": "all"
+            },
+            "held_constant": [
+              "platform",
+              "objective"
+            ],
+            "a": {
+              "value": "Register",
+              "campaigns": 23,
+              "spend": 637245.33,
+              "pipeline_per_dollar": 1260.8118,
+              "adjusted_index": 1.0092
+            },
+            "b": {
+              "value": "Save Your Seat",
+              "campaigns": 15,
+              "spend": 519304.5,
+              "pipeline_per_dollar": 980.6182,
+              "adjusted_index": 0.9858
+            },
+            "ratio_a_over_b": 1.0237
+          },
+          "detail": "Register returns 1.02x the pipeline per dollar of Save Your Seat in settled campaigns across all platforms, holding platform and objective constant (23 vs 15 campaigns)."
+        },
+        "replicates": []
+      }
+    },
+    {
+      "id": "EXP.E016",
+      "title": "Experiment E016: Customer logo wall vs quote card",
+      "statement": "E016 (Customer logo wall vs quote card, Google): Win +19% on Opportunity rate over 34 days, n=310. Rated trusted.",
+      "source": "experiment_history + campaign_summary",
+      "reliability": "final",
+      "caveats": [],
+      "data": {
+        "experiment_id": "E016",
+        "platform": "Google",
+        "start_date": "2026-02-05",
+        "variable_tested": "Creative concept",
+        "hypothesis": "Customer logo wall vs quote card",
+        "theme": "Customer Proof",
+        "logged_result": "Win",
+        "logged_lift_pct": 19,
+        "logged_confidence": "High",
+        "runtime_days": 34,
+        "sample_size": 310,
+        "primary_metric": "Opportunity rate",
+        "notes": "Logo wall is effective for enterprise.",
+        "parsed": null,
+        "comparison_key": "customer logo wall vs quote card",
+        "tier": "trusted",
+        "reasons": [],
+        "usable_as_evidence": true,
+        "overturned": false,
+        "observed": {
+          "verdict": "not observable",
+          "detail": "The arms are not a field in campaign data."
+        },
+        "replicates": []
+      }
+    },
+    {
+      "id": "EXP.E017",
+      "title": "Experiment E017: CFO targeting vs legal leaders",
+      "statement": "E017 (CFO targeting vs legal leaders, LinkedIn): Loss -23% on Qualified pipeline per $ over 40 days, n=290. Rated trusted.",
+      "source": "experiment_history + campaign_summary",
+      "reliability": "final",
+      "caveats": [],
+      "data": {
+        "experiment_id": "E017",
+        "platform": "LinkedIn",
+        "start_date": "2026-04-18",
+        "variable_tested": "Audience",
+        "hypothesis": "CFO targeting vs legal leaders",
+        "theme": "ROI",
+        "logged_result": "Loss",
+        "logged_lift_pct": -23,
+        "logged_confidence": "High",
+        "runtime_days": 40,
+        "sample_size": 290,
+        "primary_metric": "Qualified pipeline per $",
+        "notes": "Finance audiences are poor primary targets.",
+        "parsed": null,
+        "comparison_key": "cfo targeting vs legal leaders",
+        "tier": "trusted",
+        "reasons": [],
+        "usable_as_evidence": true,
+        "overturned": false,
+        "observed": {
+          "verdict": "not observable",
+          "detail": "The arms are not a field in campaign data."
+        },
+        "replicates": []
+      }
+    },
+    {
+      "id": "EXP.E018",
+      "title": "Experiment E018: Automation vs AI productivity",
+      "statement": "E018 (Automation vs AI productivity, Meta): Win +10% on Pipeline per $ over 25 days, n=205. Rated directional because logged confidence is Medium.",
+      "source": "experiment_history + campaign_summary",
+      "reliability": "observational",
+      "caveats": [],
+      "data": {
+        "experiment_id": "E018",
+        "platform": "Meta",
+        "start_date": "2026-02-12",
+        "variable_tested": "Headline",
+        "hypothesis": "Automation vs AI productivity",
+        "theme": "Workflow Automation",
+        "logged_result": "Win",
+        "logged_lift_pct": 10,
+        "logged_confidence": "Medium",
+        "runtime_days": 25,
+        "sample_size": 205,
+        "primary_metric": "Pipeline per $",
+        "notes": "More effective for in-house mid-market.",
+        "parsed": {
+          "dimension": "theme",
+          "a": "Workflow Automation",
+          "b": "AI Productivity",
+          "scope": {}
+        },
+        "comparison_key": "theme:AI Productivity|Workflow Automation",
+        "tier": "directional",
+        "reasons": [
+          "logged confidence is Medium"
+        ],
+        "usable_as_evidence": true,
+        "overturned": false,
+        "observed": {
+          "verdict": "unclear",
+          "ratio_a_over_b": 1.0724,
+          "comparison": {
+            "dimension": "theme",
+            "scope": {
+              "platform": "Meta",
+              "audience_group": "all"
+            },
+            "held_constant": [
+              "objective"
+            ],
+            "a": {
+              "value": "Workflow Automation",
+              "campaigns": 8,
+              "spend": 138284.83,
+              "pipeline_per_dollar": 703.9612,
+              "adjusted_index": 0.9824
+            },
+            "b": {
+              "value": "AI Productivity",
+              "campaigns": 8,
+              "spend": 407726.83,
+              "pipeline_per_dollar": 604.1522,
+              "adjusted_index": 0.916
+            },
+            "ratio_a_over_b": 1.0724
+          },
+          "detail": "Workflow Automation returns 1.07x the pipeline per dollar of AI Productivity in settled campaigns on Meta, holding objective constant (8 vs 8 campaigns)."
+        },
+        "replicates": []
+      }
+    },
+    {
+      "id": "EXP.summary",
+      "title": "How much of the experiment log can be trusted",
+      "statement": "Of 18 logged experiments, 6 are trusted, 9 are directional and 3 are rejected for short runtime or small sample. 2 logged wins or losses are overturned (E012, E013). Campaign data disagrees with E003, E004, E009, E013; for a valid test that is a reason to re-confirm, not to overturn.",
+      "source": "experiment_history + campaign_summary",
+      "reliability": "final",
+      "caveats": [],
+      "data": {
+        "tiers": {
+          "directional": 9,
+          "trusted": 6,
+          "rejected": 3
+        },
+        "overturned": [
+          "E012",
+          "E013"
+        ],
+        "contradicted_by_campaign_data": [
+          "E003",
+          "E004",
+          "E009",
+          "E013"
+        ],
+        "rules": {
+          "min_runtime_days": 14,
+          "min_sample_size": 100,
+          "outcome_metrics": [
+            "qualified pipeline per $",
+            "pipeline per $",
+            "arr per $",
+            "opportunity rate",
+            "qualified lead rate",
+            "cost per opportunity"
+          ]
+        }
+      }
+    },
+    {
+      "id": "SIG.01",
+      "title": "Google budget moved from Webinar to Demo",
+      "statement": "In the last 8 weeks Google Webinar fell from 55% to 5% of platform spend while Demo rose from 42% to 92%. In settled campaigns Google Webinar returns 3.2x the pipeline per dollar of Google Demo. The only test favoring Demo (E013) is rejected as a false winner.",
+      "source": "derived from MIX.objective, SEG.platform_objective, SEG.objective, EXP.E013",
+      "reliability": "observational",
+      "caveats": [
+        "The mix shift is a fact. Why it happened is not in the data."
+      ],
+      "data": {
+        "type": "budget_moved_to_weaker_offer",
+        "strength": "strong",
+        "metrics": {
+          "platform": "Google",
+          "offer_down": "Webinar",
+          "offer_up": "Demo",
+          "share_down": [
+            54.5018,
+            4.7374
+          ],
+          "share_up": [
+            41.9886,
+            91.6373
+          ],
+          "efficiency_ratio": 3.1923
+        },
+        "evidence_ids": [
+          "MIX.objective",
+          "SEG.platform_objective",
+          "SEG.objective",
+          "EXP.E013"
+        ],
+        "test_angle": "Head-to-head Webinar vs Demo on Google, same audience and theme, read on pipeline per dollar after attribution settles.",
+        "cautions": [
+          "The mix shift is a fact. Why it happened is not in the data."
+        ],
+        "rejected_experiments_on_topic": [
+          "E013"
+        ]
+      }
+    },
+    {
+      "id": "SIG.02",
+      "title": "E013 is logged as a win but is not a valid read",
+      "statement": "E013 (Demo vs webinar, Google) is logged as Win +15% but is not a valid read: ran 5 days (minimum 14); sample of 31 (minimum 100); primary metric 'Lead conversion rate' is a proxy, not a business outcome; logged confidence is Low. Campaign data disagrees: Demo returns 0.31x the pipeline per dollar of Webinar in settled campaigns on Google (18 vs 15 campaigns).",
+      "source": "derived from EXP.E013, EXP.summary",
+      "reliability": "observational",
+      "caveats": [
+        "Until re-run, this result should be removed from the team's list of learnings."
+      ],
+      "data": {
+        "type": "false_winner",
+        "strength": "strong",
+        "metrics": {
+          "runtime_days": 5,
+          "sample_size": 31,
+          "observed": "disagrees"
+        },
+        "evidence_ids": [
+          "EXP.E013",
+          "EXP.summary"
+        ],
+        "test_angle": "Re-run 'Demo vs webinar' at full length and sample on an outcome metric before acting on it.",
+        "cautions": [
+          "Until re-run, this result should be removed from the team's list of learnings."
+        ],
+        "rejected_experiments_on_topic": [
+          "E013"
+        ]
+      }
+    },
+    {
+      "id": "SIG.03",
+      "title": "Google beats comparable campaigns",
+      "statement": "Google (platform) returns 1.86x the pipeline of comparable campaigns, above benchmark in all 3 cells with enough spend. It takes 31% of settled spend and 37% of the last 8 weeks' spend. Like for like, that is pipeline worth 29% of the program total gained (modeled).",
+      "source": "derived from SEG.platform, SEG.platform_objective",
+      "reliability": "modeled",
+      "caveats": [
+        "Observational gap. Confirms where to test, not the size of the win."
+      ],
+      "data": {
+        "type": "segment_outperforms",
+        "strength": "strong",
+        "metrics": {
+          "dimension": "platform",
+          "value": "Google",
+          "adjusted_index": 1.861,
+          "spend_share": 0.3075,
+          "recent_spend_share": 0.3738,
+          "pipeline_gap_share_modeled": 0.293,
+          "cells_evaluated": 3
+        },
+        "evidence_ids": [
+          "SEG.platform",
+          "SEG.platform_objective"
+        ],
+        "test_angle": "Controlled test that scales Google against the current mix, measured on pipeline per dollar.",
+        "cautions": [
+          "Observational gap. Confirms where to test, not the size of the win."
+        ],
+        "rejected_experiments_on_topic": []
+      }
+    },
+    {
+      "id": "SIG.04",
+      "title": "Demo trails comparable campaigns",
+      "statement": "Demo (objective) returns 0.46x the pipeline of comparable campaigns, below benchmark in all 3 cells with enough spend. It takes 49% of settled spend and 61% of the last 8 weeks' spend. Like for like, that is pipeline worth 23% of the program total not realized (modeled).",
+      "source": "derived from SEG.objective, SEG.platform_objective",
+      "reliability": "modeled",
+      "caveats": [
+        "Observational gap. Confirms where to test, not the size of the win."
+      ],
+      "data": {
+        "type": "segment_underperforms",
+        "strength": "strong",
+        "metrics": {
+          "dimension": "objective",
+          "value": "Demo",
+          "adjusted_index": 0.4562,
+          "spend_share": 0.4945,
+          "recent_spend_share": 0.6134,
+          "pipeline_gap_share_modeled": -0.2281,
+          "cells_evaluated": 3
+        },
+        "evidence_ids": [
+          "SEG.objective",
+          "SEG.platform_objective"
+        ],
+        "test_angle": "Controlled test that moves budget away from Demo toward the stronger alternative, measured on pipeline per dollar.",
+        "cautions": [
+          "Observational gap. Confirms where to test, not the size of the win."
+        ],
+        "rejected_experiments_on_topic": [
+          "E013"
+        ]
+      }
+    },
+    {
+      "id": "SIG.05",
+      "title": "Webinar beats comparable campaigns",
+      "statement": "Webinar (objective) returns 1.42x the pipeline of comparable campaigns, above benchmark in all 3 cells with enough spend. It takes 41% of settled spend and 22% of the last 8 weeks' spend. Like for like, that is pipeline worth 22% of the program total gained (modeled).",
+      "source": "derived from SEG.objective, SEG.platform_objective, EXP.E003",
+      "reliability": "modeled",
+      "caveats": [
+        "Observational gap. Confirms where to test, not the size of the win."
+      ],
+      "data": {
+        "type": "segment_outperforms",
+        "strength": "strong",
+        "metrics": {
+          "dimension": "objective",
+          "value": "Webinar",
+          "adjusted_index": 1.424,
+          "spend_share": 0.4106,
+          "recent_spend_share": 0.2197,
+          "pipeline_gap_share_modeled": 0.2186,
+          "cells_evaluated": 3
+        },
+        "evidence_ids": [
+          "SEG.objective",
+          "SEG.platform_objective",
+          "EXP.E003"
+        ],
+        "test_angle": "Controlled test that scales Webinar against the current mix, measured on pipeline per dollar.",
+        "cautions": [
+          "Observational gap. Confirms where to test, not the size of the win."
+        ],
+        "rejected_experiments_on_topic": [
+          "E013"
+        ]
+      }
+    },
+    {
+      "id": "SIG.06",
+      "title": "LinkedIn trails comparable campaigns",
+      "statement": "LinkedIn (platform) returns 0.06x the pipeline of comparable campaigns, below benchmark in all 3 cells with enough spend. It takes 31% of settled spend and 23% of the last 8 weeks' spend. Like for like, that is pipeline worth 19% of the program total not realized (modeled).",
+      "source": "derived from SEG.platform, SEG.platform_objective",
+      "reliability": "modeled",
+      "caveats": [
+        "Observational gap. Confirms where to test, not the size of the win."
+      ],
+      "data": {
+        "type": "segment_underperforms",
+        "strength": "strong",
+        "metrics": {
+          "dimension": "platform",
+          "value": "LinkedIn",
+          "adjusted_index": 0.0617,
+          "spend_share": 0.3105,
+          "recent_spend_share": 0.2278,
+          "pipeline_gap_share_modeled": -0.1874,
+          "cells_evaluated": 3
+        },
+        "evidence_ids": [
+          "SEG.platform",
+          "SEG.platform_objective"
+        ],
+        "test_angle": "Controlled test that moves budget away from LinkedIn toward the stronger alternative, measured on pipeline per dollar.",
+        "cautions": [
+          "Observational gap. Confirms where to test, not the size of the win."
+        ],
+        "rejected_experiments_on_topic": []
+      }
+    },
+    {
+      "id": "SIG.07",
+      "title": "24 of 41 LinkedIn campaigns produced no opportunities",
+      "statement": "24 of 41 settled LinkedIn campaigns produced zero opportunities on $385,683 of spend.",
+      "source": "derived from ZERO.opportunities, SEG.platform, SEG.platform_objective",
+      "reliability": "observational",
+      "caveats": [
+        "Do not read this as 'turn the channel off'. Read it as 'prove what it contributes'."
+      ],
+      "data": {
+        "type": "zero_outcome_spend",
+        "strength": "strong",
+        "metrics": {
+          "platform": "LinkedIn",
+          "campaigns": 24,
+          "of": 41,
+          "spend": 385682.87
+        },
+        "evidence_ids": [
+          "ZERO.opportunities",
+          "SEG.platform",
+          "SEG.platform_objective"
+        ],
+        "test_angle": "Holdout test of LinkedIn's real contribution before cutting it, since last-touch attribution can hide influence on enterprise deals.",
+        "cautions": [
+          "Do not read this as 'turn the channel off'. Read it as 'prove what it contributes'."
+        ],
+        "rejected_experiments_on_topic": []
+      }
+    },
+    {
+      "id": "SIG.08",
+      "title": "Law Firm - Enterprise beats comparable campaigns",
+      "statement": "Law Firm - Enterprise (audience) returns 1.23x the pipeline of comparable campaigns, above benchmark in all 5 cells with enough spend. It takes 26% of settled spend and 13% of the last 8 weeks' spend. Like for like, that is pipeline worth 9% of the program total gained (modeled).",
+      "source": "derived from SEG.audience, SEG.platform_objective",
+      "reliability": "modeled",
+      "caveats": [
+        "Observational gap. Confirms where to test, not the size of the win."
+      ],
+      "data": {
+        "type": "segment_outperforms",
+        "strength": "strong",
+        "metrics": {
+          "dimension": "audience",
+          "value": "Law Firm - Enterprise",
+          "adjusted_index": 1.2348,
+          "spend_share": 0.256,
+          "recent_spend_share": 0.1257,
+          "pipeline_gap_share_modeled": 0.0915,
+          "cells_evaluated": 5
+        },
+        "evidence_ids": [
+          "SEG.audience",
+          "SEG.platform_objective"
+        ],
+        "test_angle": "Controlled test that scales Law Firm - Enterprise against the current mix, measured on pipeline per dollar.",
+        "cautions": [
+          "Observational gap. Confirms where to test, not the size of the win."
+        ],
+        "rejected_experiments_on_topic": []
+      }
+    },
+    {
+      "id": "SIG.09",
+      "title": "ROI beats comparable campaigns",
+      "statement": "ROI (theme) returns 1.29x the pipeline of comparable campaigns, above benchmark in all 6 cells with enough spend. It takes 20% of settled spend and 15% of the last 8 weeks' spend. Like for like, that is pipeline worth 6% of the program total gained (modeled).",
+      "source": "derived from SEG.theme, SEG.platform_objective, EXP.E001, EXP.E006, EXP.E014",
+      "reliability": "modeled",
+      "caveats": [
+        "Observational gap. Confirms where to test, not the size of the win."
+      ],
+      "data": {
+        "type": "segment_outperforms",
+        "strength": "strong",
+        "metrics": {
+          "dimension": "theme",
+          "value": "ROI",
+          "adjusted_index": 1.2866,
+          "spend_share": 0.2048,
+          "recent_spend_share": 0.1492,
+          "pipeline_gap_share_modeled": 0.0649,
+          "cells_evaluated": 6
+        },
+        "evidence_ids": [
+          "SEG.theme",
+          "SEG.platform_objective",
+          "EXP.E001",
+          "EXP.E006",
+          "EXP.E014"
+        ],
+        "test_angle": "Controlled test that scales ROI against the current mix, measured on pipeline per dollar.",
+        "cautions": [
+          "Observational gap. Confirms where to test, not the size of the win."
+        ],
+        "rejected_experiments_on_topic": []
+      }
+    },
+    {
+      "id": "SIG.10",
+      "title": "Security trails comparable campaigns",
+      "statement": "Security (theme) returns 0.65x the pipeline of comparable campaigns, below benchmark in all 4 cells with enough spend. It takes 6% of settled spend and 3% of the last 8 weeks' spend. Like for like, that is pipeline worth 3% of the program total not realized (modeled).",
+      "source": "derived from SEG.theme, SEG.platform_objective",
+      "reliability": "modeled",
+      "caveats": [
+        "Observational gap. Confirms where to test, not the size of the win."
+      ],
+      "data": {
+        "type": "segment_underperforms",
+        "strength": "strong",
+        "metrics": {
+          "dimension": "theme",
+          "value": "Security",
+          "adjusted_index": 0.652,
+          "spend_share": 0.0557,
+          "recent_spend_share": 0.0261,
+          "pipeline_gap_share_modeled": -0.0257,
+          "cells_evaluated": 4
+        },
+        "evidence_ids": [
+          "SEG.theme",
+          "SEG.platform_objective"
+        ],
+        "test_angle": "Controlled test that moves budget away from Security toward the stronger alternative, measured on pipeline per dollar.",
+        "cautions": [
+          "Observational gap. Confirms where to test, not the size of the win."
+        ],
+        "rejected_experiments_on_topic": [
+          "E011"
+        ]
+      }
+    },
+    {
+      "id": "SIG.11",
+      "title": "Customer Proof trails comparable campaigns",
+      "statement": "Customer Proof (theme) returns 0.75x the pipeline of comparable campaigns, below benchmark in all 4 cells with enough spend. It takes 9% of settled spend and 24% of the last 8 weeks' spend. Like for like, that is pipeline worth 2% of the program total not realized (modeled).",
+      "source": "derived from SEG.theme, SEG.platform_objective, EXP.E009",
+      "reliability": "modeled",
+      "caveats": [
+        "Observational gap. Confirms where to test, not the size of the win."
+      ],
+      "data": {
+        "type": "segment_underperforms",
+        "strength": "strong",
+        "metrics": {
+          "dimension": "theme",
+          "value": "Customer Proof",
+          "adjusted_index": 0.7482,
+          "spend_share": 0.0925,
+          "recent_spend_share": 0.2353,
+          "pipeline_gap_share_modeled": -0.0195,
+          "cells_evaluated": 4
+        },
+        "evidence_ids": [
+          "SEG.theme",
+          "SEG.platform_objective",
+          "EXP.E009"
+        ],
+        "test_angle": "Controlled test that moves budget away from Customer Proof toward the stronger alternative, measured on pipeline per dollar.",
+        "cautions": [
+          "Observational gap. Confirms where to test, not the size of the win."
+        ],
+        "rejected_experiments_on_topic": []
+      }
+    },
+    {
+      "id": "SIG.12",
+      "title": "Meta creative wears out after week 6",
+      "statement": "Meta CTR holds for 6 weeks of a campaign's life and is at 79% of launch level by week 9. 21 campaigns ran past that point, putting $190,139 (17% of Meta spend) behind tired creative.",
+      "source": "derived from FATIGUE.curve, DQ.creative_age",
+      "reliability": "observational",
+      "caveats": [
+        "Fatigue is measured on CTR. Whether it carries through to pipeline is untested."
+      ],
+      "data": {
+        "type": "creative_fatigue",
+        "strength": "strong",
+        "metrics": {
+          "platform": "Meta",
+          "campaigns_past_onset": 21,
+          "spend_past_onset": 190139.02,
+          "share_of_platform_spend": 0.1678,
+          "clicks_below_launch_rate": 22381.3864,
+          "onset_week": 7,
+          "onset_day": 43
+        },
+        "evidence_ids": [
+          "FATIGUE.curve",
+          "DQ.creative_age"
+        ],
+        "test_angle": "Rotate in a fresh creative at day 42 versus letting the original run, on Meta.",
+        "cautions": [
+          "Fatigue is measured on CTR. Whether it carries through to pipeline is untested."
+        ],
+        "rejected_experiments_on_topic": []
+      }
+    },
+    {
+      "id": "SIG.13",
+      "title": "LinkedIn creative wears out after week 7",
+      "statement": "LinkedIn CTR holds for 7 weeks of a campaign's life and is at 71% of launch level by week 10. 18 campaigns ran past that point, putting $94,289 (10% of LinkedIn spend) behind tired creative.",
+      "source": "derived from FATIGUE.curve, DQ.creative_age",
+      "reliability": "observational",
+      "caveats": [
+        "Fatigue is measured on CTR. Whether it carries through to pipeline is untested."
+      ],
+      "data": {
+        "type": "creative_fatigue",
+        "strength": "strong",
+        "metrics": {
+          "platform": "LinkedIn",
+          "campaigns_past_onset": 18,
+          "spend_past_onset": 94289.42,
+          "share_of_platform_spend": 0.1019,
+          "clicks_below_launch_rate": 2686.7087,
+          "onset_week": 8,
+          "onset_day": 50
+        },
+        "evidence_ids": [
+          "FATIGUE.curve",
+          "DQ.creative_age"
+        ],
+        "test_angle": "Rotate in a fresh creative at day 49 versus letting the original run, on LinkedIn.",
+        "cautions": [
+          "Fatigue is measured on CTR. Whether it carries through to pipeline is untested."
+        ],
+        "rejected_experiments_on_topic": []
+      }
+    },
+    {
+      "id": "SIG.14",
+      "title": "Learnings the team is relying on that are not confirmed",
+      "statement": "8 experiments are usable only as direction (E002, E003, E004, E006, E007, E009, E010, E018). Settled campaign data points the other way on E003, E004, E009.",
+      "source": "derived from EXP.E002, EXP.E003, EXP.E004, EXP.E006, EXP.E007, EXP.E009, EXP.E010, EXP.E018",
+      "reliability": "observational",
+      "caveats": [
+        "Disagreement with observational data is a reason to re-test, not proof the experiment was wrong."
+      ],
+      "data": {
+        "type": "unconfirmed_learnings",
+        "strength": "moderate",
+        "metrics": {
+          "experiments": [
+            {
+              "experiment_id": "E002",
+              "hypothesis": "Video vs static for In-House",
+              "why": "notes describe LinkedIn but the test is logged on Meta",
+              "campaign_data": "agrees"
+            },
+            {
+              "experiment_id": "E003",
+              "hypothesis": "Webinar vs content download",
+              "why": "logged confidence is Medium",
+              "campaign_data": "disagrees"
+            },
+            {
+              "experiment_id": "E004",
+              "hypothesis": "Talk to Sales vs Book Demo",
+              "why": "primary metric 'Demo conversion rate' is a proxy, not a business outcome",
+              "campaign_data": "disagrees"
+            },
+            {
+              "experiment_id": "E006",
+              "hypothesis": "Speed messaging vs ROI",
+              "why": "logged confidence is Medium",
+              "campaign_data": "agrees"
+            },
+            {
+              "experiment_id": "E007",
+              "hypothesis": "Broad legal vs role-targeted",
+              "why": "logged confidence is Medium",
+              "campaign_data": "not observable"
+            },
+            {
+              "experiment_id": "E009",
+              "hypothesis": "Customer proof vs productivity",
+              "why": "valid test, but settled campaign data points the other way",
+              "campaign_data": "disagrees"
+            },
+            {
+              "experiment_id": "E010",
+              "hypothesis": "Max conversions vs target CPA",
+              "why": "logged confidence is Medium",
+              "campaign_data": "not observable"
+            },
+            {
+              "experiment_id": "E018",
+              "hypothesis": "Automation vs AI productivity",
+              "why": "logged confidence is Medium",
+              "campaign_data": "unclear"
+            }
+          ]
+        },
+        "evidence_ids": [
+          "EXP.E002",
+          "EXP.E003",
+          "EXP.E004",
+          "EXP.E006",
+          "EXP.E007",
+          "EXP.E009",
+          "EXP.E010",
+          "EXP.E018"
+        ],
+        "test_angle": "A confirmation test for whichever of these the next quarter's plan depends on most.",
+        "cautions": [
+          "Disagreement with observational data is a reason to re-test, not proof the experiment was wrong."
+        ],
+        "rejected_experiments_on_topic": []
+      }
+    },
+    {
+      "id": "SIG.15",
+      "title": "E012 is logged as a win but is not a valid read",
+      "statement": "E012 (Video vs static for Meta, Meta) is logged as Win +21% but is not a valid read: ran 4 days (minimum 14); sample of 24 (minimum 100); primary metric 'CTR' is a proxy, not a business outcome; logged confidence is Low. Same question as E002.",
+      "source": "derived from EXP.E012, EXP.summary",
+      "reliability": "observational",
+      "caveats": [
+        "Until re-run, this result should be removed from the team's list of learnings."
+      ],
+      "data": {
+        "type": "false_winner",
+        "strength": "moderate",
+        "metrics": {
+          "runtime_days": 4,
+          "sample_size": 24,
+          "observed": "unclear"
+        },
+        "evidence_ids": [
+          "EXP.E012",
+          "EXP.summary"
+        ],
+        "test_angle": "Re-run 'Video vs static for Meta' at full length and sample on an outcome metric before acting on it.",
+        "cautions": [
+          "Until re-run, this result should be removed from the team's list of learnings."
+        ],
+        "rejected_experiments_on_topic": [
+          "E012"
+        ]
+      }
+    },
+    {
+      "id": "SIG.16",
+      "title": "Meta buys cheap leads that do not qualify",
+      "statement": "Meta has the lowest cost per lead ($10) but only 30% of its leads qualify, against 63% on Google. 42 of its campaigns carry the source's 'High volume / low quality' flag.",
+      "source": "derived from FUNNEL.platform, DQ.source_flags, EXP.E007",
+      "reliability": "observational",
+      "caveats": [
+        "A lower lead volume is the expected and acceptable cost of this test."
+      ],
+      "data": {
+        "type": "lead_quality",
+        "strength": "moderate",
+        "metrics": {
+          "platform": "Meta",
+          "cpl": 9.8967,
+          "ql_rate": 0.2972,
+          "best_ql_rate": 0.6263,
+          "flagged_campaigns": 42
+        },
+        "evidence_ids": [
+          "FUNNEL.platform",
+          "DQ.source_flags",
+          "EXP.E007"
+        ],
+        "test_angle": "Tighter targeting or a qualifying step on Meta, judged on cost per opportunity rather than cost per lead.",
+        "cautions": [
+          "A lower lead volume is the expected and acceptable cost of this test."
+        ],
+        "rejected_experiments_on_topic": []
+      }
+    },
+    {
+      "id": "SIG.17",
+      "title": "Security has never had a valid test",
+      "statement": "Security has 7 settled campaigns on 6% of spend and 0 valid experiments (E011 rejected). Its campaigns return 0.65x comparable campaigns, and it exists only in Static format.",
+      "source": "derived from SEG.theme, CREATIVE.gaps, EXP.E011",
+      "reliability": "observational",
+      "caveats": [
+        "Current evidence says Security underperforms. This is an exploration bet, not a scaling bet."
+      ],
+      "data": {
+        "type": "under_tested_theme",
+        "strength": "moderate",
+        "metrics": {
+          "theme": "Security",
+          "adjusted_index": 0.652,
+          "spend_share": 0.0557,
+          "valid_experiments": 0,
+          "missing_formats": [
+            "Carousel",
+            "Video"
+          ]
+        },
+        "evidence_ids": [
+          "SEG.theme",
+          "CREATIVE.gaps",
+          "EXP.E011"
+        ],
+        "test_angle": "A small, properly powered read on Security before deciding whether to invest in more creative for it.",
+        "cautions": [
+          "Current evidence says Security underperforms. This is an exploration bet, not a scaling bet."
+        ],
+        "rejected_experiments_on_topic": [
+          "E011"
+        ]
+      }
+    },
+    {
+      "id": "SIG.18",
+      "title": "CR021 has never run",
+      "statement": "CR021 (Workflow Automation, Video, Law Firm) is active in the library with zero campaigns.",
+      "source": "derived from CREATIVE.gaps, THEME.by_audience",
+      "reliability": "observational",
+      "caveats": [],
+      "data": {
+        "type": "unused_creative",
+        "strength": "context",
+        "metrics": {
+          "creative_id": "CR021",
+          "theme": "Workflow Automation",
+          "format": "Video",
+          "audience_group": "Law Firm"
+        },
+        "evidence_ids": [
+          "CREATIVE.gaps",
+          "THEME.by_audience"
+        ],
+        "test_angle": "Use CR021 as the fresh variant in a rotation or format test for Law Firm audiences.",
+        "cautions": [],
+        "rejected_experiments_on_topic": []
+      }
+    },
+    {
+      "id": "SIG.19",
+      "title": "No campaigns are scheduled past the reporting week",
+      "statement": "6 campaigns were still live on Jun 30 and 0 are scheduled to run past it. Weekly spend is $17,013, down 91% from the peak week of Mar 04 ($194,291, 50 campaigns). The 9 campaigns live this week were 7 Demo, 1 Content Download, 1 Webinar.",
+      "source": "derived from WEEK.program_status, WEEK.spend_bridge",
+      "reliability": "observational",
+      "caveats": [],
+      "data": {
+        "type": "clean_slate",
+        "strength": "context",
+        "metrics": {
+          "live_on_as_of": 6
+        },
+        "evidence_ids": [
+          "WEEK.program_status",
+          "WEEK.spend_bridge"
+        ],
+        "test_angle": "Treat the next launches as the experiment slate. Every new campaign can carry a test cell at no extra cost.",
+        "cautions": [],
+        "rejected_experiments_on_topic": []
+      }
+    }
+  ]
+}

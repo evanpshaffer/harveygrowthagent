@@ -1,0 +1,17 @@
+{
+  "proposal_id": "EXAMPLE-UNSAFE",
+  "title": "Scale Demo on LinkedIn to CFO audiences",
+  "hypothesis": "Demo beats webinar, so push demo harder with a new message",
+  "platform": "LinkedIn",
+  "audience": "Law Firm - Enterprise",
+  "region": "US",
+  "control": {"label": "Control", "description": "Webinar offer, ROI message", "objective": "Webinar", "theme": "ROI", "creative_id": "CR001"},
+  "variant": {"label": "Variant", "description": "Demo offer, Speed message, CFO targeting", "objective": "Demo", "theme": "Speed", "creative_id": "CR027"},
+  "primary_metric": "CTR",
+  "daily_budget_per_arm": 3000,
+  "runtime_days": 5,
+  "decision_rule": "",
+  "evidence_ids": ["EXP.E013"],
+  "status": "ACTIVE",
+  "requires_human_approval": false
+}
