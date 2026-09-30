@@ -3,3 +3,6 @@ __pycache__/
 .pytest_cache/
 .env
 .venv/
+# reviewer decisions and staged drafts are runtime state
+out/approvals.jsonl
+out/staged/

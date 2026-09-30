@@ -1,0 +1,81 @@
+{
+  "draft_for": "Google Ads",
+  "what_this_is": "A paused draft prepared by the Growth Agent. Field names are the agent's own; a live connector maps them to the platform's create call. Nothing has been sent to any ad platform.",
+  "status": "PAUSED",
+  "spends_money": false,
+  "to_launch": "A person activates both campaigns in Google Ads. The agent has no credentials and no activate call.",
+  "experiment": {
+    "id": "P1",
+    "title": "Google Webinar vs Demo head-to-head",
+    "hypothesis": "In settled campaigns Google Webinar returns more pipeline per dollar than Google Demo; a randomized split will show whether the offer drives it.",
+    "split": "50/50, two campaigns with equal budgets",
+    "primary_metric": "pipeline per $",
+    "guardrail_metrics": [
+      "cost per lead",
+      "click-through rate",
+      "qualified lead rate"
+    ],
+    "decision_rule": "Read on day 42 after attribution settles. If Webinar is at least 25% higher on pipeline per $ than Demo, shift Google budget toward Webinar and repeat the split on Meta before any wider move; if within 25% either way, hold the mix and extend the read; if Demo is at least 25% higher, keep Demo.",
+    "earliest_valid_read_day": 42,
+    "total_budget_usd": 14000.0,
+    "evidence_ids": [
+      "SIG.01",
+      "SEG.platform_objective",
+      "MIX.objective"
+    ],
+    "retest_of": null
+  },
+  "campaigns": [
+    {
+      "arm": "Demo (current mix)",
+      "role": "control",
+      "campaign_name": "GO_US_Law_Firm_-_Enterprise_ROI_Demo_P1_A",
+      "status": "PAUSED",
+      "daily_budget_usd": 250.0,
+      "flight_days": 28,
+      "start": "set by the person who activates it",
+      "region": "US",
+      "audience": "Law Firm - Enterprise",
+      "targeting": "account default for this audience",
+      "offer": "Demo",
+      "message_theme": "ROI",
+      "cta": "Book Demo",
+      "creative_id": "CR001",
+      "tracking": {
+        "utm_campaign": "go_us_law_firm_-_enterprise_roi_demo_p1_a",
+        "utm_content": "p1-a"
+      }
+    },
+    {
+      "arm": "Webinar",
+      "role": "variant",
+      "campaign_name": "GO_US_Law_Firm_-_Enterprise_ROI_Webinar_P1_B",
+      "status": "PAUSED",
+      "daily_budget_usd": 250.0,
+      "flight_days": 28,
+      "start": "set by the person who activates it",
+      "region": "US",
+      "audience": "Law Firm - Enterprise",
+      "targeting": "account default for this audience",
+      "offer": "Webinar",
+      "message_theme": "ROI",
+      "cta": "Register",
+      "creative_id": "CR001",
+      "tracking": {
+        "utm_campaign": "go_us_law_firm_-_enterprise_roi_webinar_p1_b",
+        "utm_content": "p1-b"
+      }
+    }
+  ],
+  "guardrails": {
+    "verdict": "ready_for_human_review",
+    "warnings": []
+  },
+  "approval": {
+    "approved_by": "Example Reviewer",
+    "approved_at": "2026-09-30T22:44:19Z",
+    "note": "Example only. Generated to show the shape of a staged draft.",
+    "design_fingerprint": "44520a8fefc0b2ed",
+    "edited_before_approval": {}
+  }
+}

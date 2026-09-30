@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weekly Experimentation Brief</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;1,7..72,400&display=swap" rel="stylesheet">
+<style>
+  /* A marked-up document on a reviewer's desk. The one loud thing is the
+     highlighter: it marks what differs in a test and what still needs a decision. */
+  :root {
+    --page: #EDF1F6;
+    --sheet: #FFFFFF;
+    --ink: #16223B;
+    --muted: #586478;
+    --rule: #D5DCE7;
+    --tint: #F4F6FA;
+    --mark: #FFE45C;
+    --approve: #17694A;
+    --approve-tint: #E6F2EC;
+    --redline: #B42318;
+    --redline-tint: #FBEBE9;
+    --serif: "Literata", Georgia, "Times New Roman", serif;
+    --sans: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+  body { margin: 0; background: var(--page); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  button, input, textarea { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 2px; }
+
+  .top { max-width: 1240px; margin: 0 auto; padding: 40px 32px 20px; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 32px; }
+  .top h1 { font-family: var(--serif); font-weight: 500; font-size: 1.75rem; letter-spacing: -0.01em; margin: 0; }
+  .top .week { color: var(--muted); font-size: 0.95rem; }
+  .standing { max-width: 1240px; margin: 0 auto; padding: 0 32px 24px; font-size: 1rem; }
+  .standing strong { font-weight: 600; }
+  .standing .sample { color: var(--muted); }
+
+  .layout { max-width: 1240px; margin: 0 auto; padding: 0 32px 96px; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 32px; align-items: start; }
+
+  /* ---- the document ---- */
+  .sheet { background: var(--sheet); border: 1px solid var(--rule); border-radius: 3px; padding: 56px 64px 64px; min-width: 0; }
+  .lede { font-family: var(--serif); font-size: 1.72rem; line-height: 1.32; font-weight: 400; letter-spacing: -0.012em; margin: 0 0 8px; max-width: 30em; text-wrap: pretty; }
+  .sheet h2 { font-family: var(--serif); font-weight: 600; font-size: 1.3rem; letter-spacing: -0.005em; margin: 56px 0 16px; }
+  .claims { list-style: none; margin: 0; padding: 0; max-width: 44em; }
+  .claims li { font-family: var(--serif); font-size: 1.06rem; line-height: 1.62; margin: 0 0 14px; padding-left: 20px; position: relative; text-wrap: pretty; }
+  .claims li::before { content: ""; position: absolute; left: 0; top: 0.78em; width: 8px; height: 1px; background: var(--ink); }
+
+  /* a citation is a footnote mark that opens the evidence */
+  .cite { font-family: var(--sans); font-size: 0.72rem; font-weight: 600; line-height: 1; vertical-align: super; border: 0; background: none; color: var(--ink); padding: 1px 3px; margin-left: 3px; cursor: pointer; border-bottom: 1px solid var(--ink); border-radius: 0; }
+  .cite:hover, .cite[aria-expanded="true"] { background: var(--mark); }
+
+  /* ---- an experiment ---- */
+  .exp { border-top: 2px solid var(--ink); margin-top: 40px; padding-top: 24px; }
+  .exp h3 { font-family: var(--serif); font-weight: 600; font-size: 1.32rem; line-height: 1.3; margin: 0 0 4px; letter-spacing: -0.008em; }
+  .exp.is-rejected h3 { text-decoration: line-through; text-decoration-color: var(--redline); text-decoration-thickness: 2px; color: var(--muted); }
+  .exp .where { color: var(--muted); font-size: 0.95rem; margin: 0 0 18px; }
+  .exp p.prose { font-family: var(--serif); font-size: 1.06rem; line-height: 1.62; max-width: 44em; margin: 0 0 14px; text-wrap: pretty; }
+  .exp p.prose b { font-family: var(--sans); font-weight: 600; font-size: 0.95rem; }
+
+  .arms { display: grid; grid-template-columns: max-content 1fr 1fr; margin: 22px 0 8px; border: 1px solid var(--rule); border-radius: 3px; font-size: 0.95rem; max-width: 46em; }
+  .arms > div { padding: 9px 14px; border-top: 1px solid var(--rule); min-width: 0; }
+  .arms > div:nth-child(-n+3) { border-top: 0; background: var(--tint); font-weight: 600; }
+  .arms .k { color: var(--muted); }
+  .arms mark { background: var(--mark); color: var(--ink); padding: 1px 4px; margin: 0 -4px; border-radius: 1px; }
+  .arms-note { color: var(--muted); font-size: 0.88rem; margin: 0 0 20px; }
+  .arms-note mark { background: var(--mark); color: var(--ink); padding: 0 4px; }
+
+  .facts { display: grid; grid-template-columns: max-content 1fr; gap: 8px 24px; margin: 0 0 20px; font-size: 0.95rem; max-width: 46em; }
+  .facts dt { color: var(--muted); }
+  .facts dd { margin: 0; font-variant-numeric: tabular-nums; }
+  del { color: var(--redline); text-decoration-thickness: 1.5px; }
+  ins { text-decoration: underline; text-decoration-color: var(--approve); text-decoration-thickness: 2px; text-underline-offset: 3px; font-weight: 600; }
+
+  .rule { border-left: 3px solid var(--ink); padding: 2px 0 2px 16px; margin: 0 0 18px; max-width: 44em; }
+  .rule .label { font-weight: 600; font-size: 0.95rem; display: block; margin-bottom: 2px; }
+  .rule p { font-family: var(--serif); font-size: 1.02rem; line-height: 1.58; margin: 0; }
+  .warnings { list-style: none; padding: 0; margin: 0 0 18px; max-width: 46em; font-size: 0.92rem; color: var(--muted); }
+  .warnings li { padding: 8px 0 0; }
+  .warnings b { color: var(--ink); font-weight: 600; }
+
+  /* ---- the decision block ---- */
+  .decision { margin-top: 24px; padding: 18px 20px 20px; border: 1px solid var(--rule); border-radius: 3px; max-width: 46em; }
+  .decision .state { font-weight: 600; margin: 0 0 4px; }
+  .decision.pending .state span { background: var(--mark); padding: 2px 6px; margin-left: -6px; }
+  .decision.approved { border-color: var(--approve); background: var(--approve-tint); }
+  .decision.approved .state { color: var(--approve); }
+  .decision.rejected { border-color: var(--redline); background: var(--redline-tint); }
+  .decision.rejected .state { color: var(--redline); }
+  .decision p { margin: 0 0 12px; font-size: 0.95rem; }
+  .decision .quiet { color: var(--muted); }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+  .btn { border: 1px solid var(--ink); background: var(--sheet); padding: 9px 16px; border-radius: 3px; font-weight: 600; font-size: 0.93rem; cursor: pointer; }
+  .btn:hover { background: var(--tint); }
+  .btn.primary { background: var(--ink); color: #fff; }
+  .btn.primary:hover { background: #24345A; }
+  .btn.danger { border-color: var(--redline); color: var(--redline); }
+  .btn.plain { border-color: transparent; text-decoration: underline; text-underline-offset: 3px; padding-left: 4px; padding-right: 4px; background: none; }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .field { display: grid; gap: 4px; font-size: 0.9rem; }
+  .field label { font-weight: 600; }
+  .field input, .field textarea { border: 1px solid var(--muted); border-radius: 3px; padding: 8px 10px; background: var(--sheet); width: 100%; }
+  .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 12px 0; max-width: 26em; }
+  .preview { font-size: 0.92rem; margin: 0 0 4px; padding: 10px 12px; border-radius: 3px; background: var(--sheet); border: 1px solid var(--rule); }
+  .preview.blocked { border-color: var(--redline); color: var(--redline); }
+  .preview ul { margin: 6px 0 0; padding-left: 18px; }
+  .error { color: var(--redline); font-weight: 600; font-size: 0.92rem; margin: 10px 0 0; }
+
+  .draft { margin-top: 14px; background: var(--sheet); border: 1px solid var(--rule); border-radius: 3px; padding: 14px 16px; }
+  .draft table { width: 100%; border-collapse: collapse; font-size: 0.86rem; font-variant-numeric: tabular-nums; }
+  .draft th { text-align: left; font-weight: 600; padding: 4px 12px 6px 0; border-bottom: 1px solid var(--ink); }
+  .draft td { padding: 7px 12px 7px 0; border-bottom: 1px solid var(--rule); vertical-align: top; white-space: nowrap; }
+  .draft td.name { white-space: normal; overflow-wrap: anywhere; font-size: 0.8rem; }
+  .draft .paused { font-weight: 700; }
+  .draft details { margin-top: 12px; }
+  details > summary { cursor: pointer; font-weight: 600; font-size: 0.93rem; }
+  pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem; line-height: 1.5; background: var(--tint); padding: 12px; border-radius: 3px; overflow: auto; max-height: 340px; margin: 10px 0 0; }
+
+  .fine { font-size: 0.95rem; max-width: 46em; }
+  .fine li { margin-bottom: 8px; }
+  .sheet details { margin-top: 28px; border-top: 1px solid var(--rule); padding-top: 18px; }
+  .sheet details summary { font-family: var(--serif); font-size: 1.12rem; }
+  .steps { font-size: 0.92rem; color: var(--muted); padding-left: 20px; }
+  .steps li { margin-bottom: 4px; }
+
+  /* ---- the reviewer's desk ---- */
+  .desk { position: sticky; top: 24px; display: grid; gap: 16px; }
+  .panel { background: var(--sheet); border: 1px solid var(--rule); border-radius: 3px; padding: 20px; }
+  .panel h2 { font-size: 1rem; font-weight: 700; margin: 0 0 12px; }
+  .queue { list-style: none; margin: 0 0 16px; padding: 0; }
+  .queue li { border-top: 1px solid var(--rule); }
+  .queue li:first-child { border-top: 0; }
+  .queue a { display: grid; grid-template-columns: 1.4em 1fr; gap: 2px 6px; padding: 10px 0; text-decoration: none; color: inherit; font-size: 0.92rem; line-height: 1.35; }
+  .queue a:hover .t { text-decoration: underline; }
+  .queue .n { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .queue .s { grid-column: 2; font-size: 0.84rem; font-weight: 600; justify-self: start; }
+  .queue .s.pending { background: var(--mark); padding: 0 5px; margin-left: -5px; }
+  .queue .s.approved { color: var(--approve); }
+  .queue .s.rejected { color: var(--redline); }
+  .meter { height: 6px; background: var(--tint); border-radius: 3px; overflow: hidden; margin: 8px 0 6px; border: 1px solid var(--rule); }
+  .meter i { display: block; height: 100%; background: var(--approve); width: 0; transition: width 0.4s ease; }
+  .small { font-size: 0.86rem; color: var(--muted); margin: 0; }
+  .small b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .record { list-style: none; margin: 0; padding: 0; font-size: 0.86rem; max-height: 260px; overflow: auto; }
+  .record li { padding: 8px 0; border-top: 1px solid var(--rule); }
+  .record li:first-child { border-top: 0; padding-top: 0; }
+  .record time { color: var(--muted); display: block; }
+  .checks { list-style: none; margin: 0; padding: 0; font-size: 0.88rem; }
+  .checks li { padding: 5px 0; display: flex; justify-content: space-between; gap: 12px; }
+  .checks li span:first-child { color: var(--muted); }
+  .checks li span:last-child { font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* ---- the evidence drawer ---- */
+  .drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 100vw); background: var(--sheet); border-left: 1px solid var(--ink); padding: 28px 32px 40px; overflow: auto; transform: translateX(100%); transition: transform 0.22s ease; z-index: 10; box-shadow: -12px 0 32px rgba(22, 34, 59, 0.12); }
+  .drawer.open { transform: none; }
+  .drawer .close { float: right; }
+  .drawer .eid { font-size: 0.84rem; color: var(--muted); margin: 0 0 4px; font-variant-numeric: tabular-nums; }
+  .drawer h2 { font-family: var(--serif); font-weight: 600; font-size: 1.3rem; line-height: 1.3; margin: 0 0 12px; }
+  .drawer .kind { font-size: 0.9rem; padding: 8px 12px; background: var(--tint); border-radius: 3px; margin: 0 0 16px; }
+  .drawer .kind b { font-weight: 700; }
+  .drawer .statement { font-family: var(--serif); font-size: 1.04rem; line-height: 1.6; margin: 0 0 16px; }
+  .drawer h3 { font-size: 0.93rem; font-weight: 700; margin: 20px 0 8px; }
+  .drawer ul { margin: 0; padding-left: 18px; font-size: 0.9rem; }
+  .drawer li { margin-bottom: 6px; }
+  .tablewrap { overflow: auto; border: 1px solid var(--rule); border-radius: 3px; }
+  .drawer table { border-collapse: collapse; font-size: 0.8rem; font-variant-numeric: tabular-nums; width: 100%; }
+  .drawer th, .drawer td { padding: 6px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--rule); }
+  .drawer th { background: var(--tint); font-weight: 600; }
+  .drawer th:first-child, .drawer td:first-child { text-align: left; position: sticky; left: 0; background: var(--sheet); }
+  .drawer th:first-child { background: var(--tint); }
+
+  .empty { max-width: 640px; margin: 80px auto; background: var(--sheet); border: 1px solid var(--rule); padding: 40px; border-radius: 3px; }
+  .empty h2 { font-family: var(--serif); font-weight: 600; margin-top: 0; }
+  .empty code { background: var(--tint); padding: 2px 6px; border-radius: 3px; font-size: 0.92rem; }
+
+  @media (max-width: 1020px) {
+    .layout { grid-template-columns: 1fr; }
+    .desk { position: static; order: -1; }
+    .sheet { padding: 36px 28px 44px; }
+  }
+  @media (max-width: 560px) {
+    .top, .standing, .layout { padding-left: 16px; padding-right: 16px; }
+    .sheet { padding: 28px 18px 36px; }
+    .lede { font-size: 1.36rem; }
+    .arms { grid-template-columns: 1fr 1fr; }
+    .arms .k { grid-column: 1 / -1; background: var(--tint); padding-bottom: 4px; }
+    .arms > div:nth-child(1) { display: none; }
+    .facts { grid-template-columns: 1fr; gap: 2px; }
+    .facts dd { margin-bottom: 10px; }
+    .edit-grid { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .drawer, .meter i { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div id="app" aria-live="polite"></div>
+<aside class="drawer" id="drawer" aria-label="Evidence" hidden></aside>
+
+<script>
+"use strict";
+let S = null;                    // server state
+const ui = { editing: {}, error: {}, preview: {}, showDraft: {} };
+const $ = (sel, el = document) => el.querySelector(sel);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const money = (n) => "$" + Math.round(Number(n)).toLocaleString("en-US");
+const num = (n) => Math.round(Number(n)).toLocaleString("en-US");
+const when = (iso) => new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+const reviewer = () => localStorage.getItem("reviewer") || "";
+
+const RELIABILITY = {
+  final: ["Settled data", "Safe to act on."],
+  provisional: ["Provisional", "Inside the attribution lag window. It will still change."],
+  observational: ["Observational", "A pattern across campaigns, not a controlled test. It shows where to test, not what is true."],
+  modeled: ["Modeled", "An estimate from a stated formula. Not an observed result."],
+  data_quality: ["Data quality note", "A known problem with the data and how the agent handles it."],
+};
+
+/* Footnote numbers are assigned in reading order, so the same evidence keeps one number. */
+let notes = {};
+function cites(ids) {
+  return ids.map((id) => {
+    if (!notes[id]) notes[id] = Object.keys(notes).length + 1;
+    const title = S.evidence[id] ? S.evidence[id].title : id;
+    return `<button class="cite" data-eid="${esc(id)}" aria-label="Evidence ${notes[id]}: ${esc(title)}" title="${esc(title)}">${notes[id]}</button>`;
+  }).join("");
+}
+const claim = (c) => `<li>${esc(c.text)}${cites(c.evidence_ids)}</li>`;
+
+function weekLabel(w) {
+  const [a, b] = w.reporting_week.map((d) => new Date(d + "T12:00:00"));
+  const m = (d) => d.toLocaleString("en-US", { month: "long" });
+  return a.getMonth() === b.getMonth() ? `${m(a)} ${a.getDate()} to ${b.getDate()}, ${b.getFullYear()}` : `${m(a)} ${a.getDate()} to ${m(b)} ${b.getDate()}, ${b.getFullYear()}`;
+}
+
+function statusOf(id) {
+  const d = S.decisions[id];
+  if (!d || d.decision === "reopened") return "pending";
+  return d.decision;
+}
+function effective(p) {   // the proposal with any approved edits applied
+  const d = S.decisions[p.proposal_id];
+  const out = { ...p };
+  if (d && d.decision === "approved") for (const [k, v] of Object.entries(d.edits || {})) out[k] = v.to;
+  return out;
+}
+
+function armsTable(p, differs) {
+  const rows = [["Offer", "objective"], ["Message", "theme"], ["Call to action", "cta"], ["Creative", "creative_id"], ["Targeting", "targeting"]]
+    .filter(([, k]) => p.control[k] || p.variant[k]);
+  const changed = (k) => (p.control[k] || "") !== (p.variant[k] || "");
+  const cell = (k, v) => changed(k) ? `<mark>${esc(v || "Account default")}</mark>` : esc(v || "Account default");
+  return `<div class="arms" role="table" aria-label="Control and variant">
+      <div></div><div>${esc(p.control.label)}</div><div>${esc(p.variant.label)}</div>
+      ${rows.map(([label, k]) => `<div class="k">${label}</div><div>${esc(p.control[k] || "Account default")}</div><div>${cell(k, p.variant[k])}</div>`).join("")}
+    </div>
+    <p class="arms-note"><mark>Highlighted</mark> is what the test changes. Everything else is identical in both arms.</p>`;
+}
+
+function budgetLine(p, verdict, d) {
+  const e = (d && d.decision === "approved" && d.edits) || {};
+  const part = (k, fmt) => e[k] ? `<del>${fmt(e[k].from)}</del> <ins>${fmt(e[k].to)}</ins>` : fmt(p[k]);
+  const daily = e.daily_budget_per_arm ? e.daily_budget_per_arm.to : p.daily_budget_per_arm;
+  const days = e.runtime_days ? e.runtime_days.to : p.runtime_days;
+  return `${part("daily_budget_per_arm", money)} per arm per day for ${part("runtime_days", (n) => n)} days, ${money(daily * 2 * days)} in total`;
+}
+
+function decisionBlock(exp, verdict) {
+  const p = exp.proposal, id = p.proposal_id, st = statusOf(id), d = S.decisions[id];
+  const err = ui.error[id] ? `<p class="error" role="alert">${esc(ui.error[id])}</p>` : "";
+  if (st === "approved") {
+    const draft = S.staged[id];
+    return `<div class="decision approved">
+      <p class="state">Approved by ${esc(d.reviewer)} on ${when(d.at)}</p>
+      <p>A paused draft is staged for ${esc(draft ? draft.draft_for : p.platform)}. Nothing is spending. ${esc(draft ? draft.to_launch : "")}</p>
+      ${d.note ? `<p class="quiet">Note: ${esc(d.note)}</p>` : ""}
+      <div class="actions">
+        <button class="btn" data-act="toggle-draft" data-id="${esc(id)}">${ui.showDraft[id] ? "Hide staged draft" : "View staged draft"}</button>
+        <button class="btn plain" data-act="reopen" data-id="${esc(id)}">Reopen decision</button>
+      </div>
+      ${ui.showDraft[id] && draft ? draftView(draft) : ""}${err}
+    </div>`;
+  }
+  if (st === "rejected") {
+    return `<div class="decision rejected">
+      <p class="state">Rejected by ${esc(d.reviewer)} on ${when(d.at)}</p>
+      <p>Nothing was staged.${d.note ? " Note: " + esc(d.note) : ""}</p>
+      <div class="actions"><button class="btn plain" data-act="reopen" data-id="${esc(id)}">Reopen decision</button></div>${err}
+    </div>`;
+  }
+  if (ui.editing[id]) {
+    const v = ui.editing[id], pv = ui.preview[id];
+    let preview = `<p class="preview">Checking the edited design against the guardrails.</p>`;
+    if (pv && pv.error) preview = `<p class="preview blocked">${esc(pv.error)}</p>`;
+    else if (pv && pv.verdict === "blocked") preview = `<div class="preview blocked">The guardrails block this edit:<ul>${pv.blocks.map((b) => `<li>${esc(b.message)}</li>`).join("")}</ul></div>`;
+    else if (pv) {
+      const arms = Object.values(pv.computed.arms || {});
+      const low = arms.length ? Math.min(...arms.map((a) => a.expected_qualified_leads)) : 0;
+      preview = `<p class="preview">Guardrails pass. ${money(pv.computed.total_budget)} in total, about ${num(low)} qualified leads in the smaller arm, read on day ${pv.computed.earliest_readout_day}.</p>`;
+    }
+    const ok = pv && pv.verdict === "ready_for_human_review";
+    return `<div class="decision pending">
+      <p class="state"><span>Editing before approval</span></p>
+      <p class="quiet">Budget and runtime can change here. Anything else is a new design and goes back to the agent.</p>
+      <div class="edit-grid">
+        <div class="field"><label for="b-${esc(id)}">Daily budget per arm ($)</label><input id="b-${esc(id)}" type="number" min="1" step="50" value="${esc(v.daily_budget_per_arm)}" data-edit="daily_budget_per_arm" data-id="${esc(id)}"></div>
+        <div class="field"><label for="r-${esc(id)}">Runtime (days)</label><input id="r-${esc(id)}" type="number" min="1" step="1" value="${esc(v.runtime_days)}" data-edit="runtime_days" data-id="${esc(id)}"></div>
+      </div>
+      ${preview}
+      <div class="actions">
+        <button class="btn primary" data-act="approve" data-id="${esc(id)}" ${ok ? "" : "disabled"}>Approve with these changes</button>
+        <button class="btn plain" data-act="cancel-edit" data-id="${esc(id)}">Cancel</button>
+      </div>${err}
+    </div>`;
+  }
+  return `<div class="decision pending">
+    <p class="state"><span>Awaiting your decision</span></p>
+    <p class="quiet">Approving stages a paused draft. It does not launch anything or spend budget.</p>
+    <div class="field"><label for="n-${esc(id)}">Note for the record (optional)</label><input id="n-${esc(id)}" type="text" data-note="${esc(id)}" placeholder="Why you decided this way"></div>
+    <div class="actions">
+      <button class="btn primary" data-act="approve" data-id="${esc(id)}">Approve and stage draft</button>
+      <button class="btn" data-act="edit" data-id="${esc(id)}">Edit budget or runtime</button>
+      <button class="btn danger" data-act="reject" data-id="${esc(id)}">Reject</button>
+    </div>${err}
+  </div>`;
+}
+
+function draftView(draft) {
+  return `<div class="draft">
+    <table>
+      <thead><tr><th>Campaign</th><th>Status</th><th>Per day</th><th>Offer</th><th>Button</th></tr></thead>
+      <tbody>${draft.campaigns.map((c) => `<tr><td class="name">${esc(c.campaign_name)}</td><td class="paused">${esc(c.status)}</td><td>${money(c.daily_budget_usd)}</td><td>${esc(c.offer)}</td><td>${esc(c.cta || "")}</td></tr>`).join("")}</tbody>
+    </table>
+    <details><summary>Full draft as it would be sent to ${esc(draft.draft_for)}</summary><pre>${esc(JSON.stringify(draft, null, 2))}</pre></details>
+  </div>`;
+}
+
+function experiment(exp, verdict) {
+  const p = exp.proposal, id = p.proposal_id, st = statusOf(id), d = S.decisions[id];
+  const arms = Object.entries(verdict.computed.arms || {});
+  const eff = effective(p);
+  const scale = (eff.daily_budget_per_arm * eff.runtime_days) / (p.daily_budget_per_arm * p.runtime_days);
+  return `<section class="exp ${st === "rejected" ? "is-rejected" : ""}" id="exp-${esc(id)}">
+    <h3>${exp.rank}. ${esc(p.title)}</h3>
+    <p class="where">${esc(p.platform)}, ${esc(p.audience)}, ${esc(p.region)}${p.retest_of ? `. Re-test of ${esc(p.retest_of)}` : ""}</p>
+    <p class="prose"><b>Hypothesis.</b> ${esc(p.hypothesis)}</p>
+    <p class="prose"><b>Why this test.</b> ${esc(exp.rationale.text)}${cites(exp.rationale.evidence_ids)}</p>
+    ${armsTable(p, verdict.computed.differs_on || [])}
+    <dl class="facts">
+      <dt>Primary metric</dt><dd>${esc(p.primary_metric)}</dd>
+      <dt>Watched alongside</dt><dd>${esc(p.guardrail_metrics.join(", ") || "None")}</dd>
+      <dt>Budget</dt><dd>${budgetLine(p, verdict, d)}</dd>
+      ${arms.length ? `<dt>Expected volume</dt><dd>${arms.map(([name, a]) => `${esc(name)}: about ${num(a.expected_qualified_leads * scale)} qualified leads and ${num(a.expected_opportunities * scale)} opportunities`).join("<br>")}</dd>` : ""}
+      <dt>Earliest valid read</dt><dd>Day ${eff.runtime_days + S.limits.attribution_days}, which is the runtime plus ${S.limits.attribution_days} days for attribution to settle</dd>
+      <dt>Guardrails</dt><dd>${verdict.verdict === "ready_for_human_review" ? "Passed every rule" : "Blocked"}${verdict.warnings.length ? `, with ${verdict.warnings.length} warning${verdict.warnings.length > 1 ? "s" : ""}` : ""}</dd>
+      <dt>Supporting evidence</dt><dd>${cites(p.evidence_ids)}</dd>
+    </dl>
+    <div class="rule"><span class="label">Decision rule, written before the test runs</span><p>${esc(p.decision_rule)}</p></div>
+    <p class="prose"><b>What we learn either way.</b> ${esc(exp.expected_learning)}</p>
+    ${verdict.warnings.length ? `<ul class="warnings">${verdict.warnings.map((w) => `<li><b>Guardrail warning.</b> ${esc(w.message)}</li>`).join("")}</ul>` : ""}
+    ${decisionBlock(exp, verdict)}
+  </section>`;
+}
+
+function desk(pairs) {
+  const approvedTotal = Object.values(S.staged).reduce((t, d) => t + (d.experiment.total_budget_usd || 0), 0);
+  const cap = S.limits.max_slate_budget;
+  const label = { pending: "Awaiting decision", approved: "Approved, draft staged", rejected: "Rejected" };
+  const run = S.brief.run;
+  const b = S.brief.brief;
+  const claims = 1 + b.what_happened.length + b.why.length + b.creative_recommendations.length + b.risks_and_observations.length + b.experiments.length;
+  const verb = { approved: "approved", rejected: "rejected", reopened: "reopened" };
+  return `<aside class="desk" aria-label="Your decisions">
+    <div class="panel">
+      <h2>Your decisions</h2>
+      <ol class="queue">${pairs.map(([e]) => { const st = statusOf(e.proposal.proposal_id); return `<li><a href="#exp-${esc(e.proposal.proposal_id)}"><span class="n">${e.rank}.</span><span class="t">${esc(e.proposal.title)}</span><span class="s ${st}">${label[st]}</span></a></li>`; }).join("")}</ol>
+      <div class="field"><label for="reviewer">Deciding as</label><input id="reviewer" type="text" value="${esc(reviewer())}" placeholder="Your name" autocomplete="name"></div>
+      <div class="meter" role="img" aria-label="${money(approvedTotal)} approved of a ${money(cap)} ceiling"><i style="width:${Math.min(100, (approvedTotal / cap) * 100)}%"></i></div>
+      <p class="small"><b>${money(approvedTotal)}</b> approved of a <b>${money(cap)}</b> ceiling for one brief</p>
+    </div>
+    <div class="panel">
+      <h2>Record</h2>
+      ${S.log.length ? `<ol class="record">${[...S.log].reverse().map((r) => `<li><time datetime="${esc(r.at)}">${when(r.at)}</time>${esc(r.reviewer)} ${verb[r.decision]} “${esc(r.title)}”${Object.keys(r.edits || {}).length ? ", after changing " + Object.entries(r.edits).map(([k, v]) => `${k === "runtime_days" ? "runtime" : "daily budget"} from ${k === "runtime_days" ? v.from : money(v.from)} to ${k === "runtime_days" ? v.to : money(v.to)}`).join(" and ") : ""}.${r.note ? ` ${esc(r.note)}` : ""}</li>`).join("")}</ol>` : `<p class="small">No decisions yet. Every decision is added here and never rewritten.</p>`}
+    </div>
+    <div class="panel">
+      <h2>How this brief was checked</h2>
+      <ul class="checks">
+        <li><span>Facts computed by code</span><span>${Object.keys(S.evidence).length} cited items</span></li>
+        <li><span>Claims with every number traced</span><span>${claims}</span></li>
+        <li><span>Experiments through guardrails</span><span>${b.experiments.length} of ${b.experiments.length}</span></li>
+        <li><span>Items held back</span><span>${S.brief.held_back.length}</span></li>
+        <li><span>Written by</span><span>${esc(run.model)}</span></li>
+        <li><span>Run</span><span>${run.mode === "live" ? `${run.turns} turns, $${Number(run.cost_usd || 0).toFixed(2)}, ${Math.round(run.seconds)}s` : "Replay, not a live run"}</span></li>
+      </ul>
+    </div>
+  </aside>`;
+}
+
+function render() {
+  const app = $("#app");
+  if (!S.has_brief) {
+    app.innerHTML = `<div class="empty"><h2>No brief to review yet</h2><p>Run the agent first, then reload this page.</p><p><code>python -m growth_agent.brief</code></p></div>`;
+    return;
+  }
+  notes = {};
+  const b = S.brief.brief;
+  const pairs = b.experiments.map((e, i) => [e, S.brief.experiment_verdicts[i]]).sort((x, y) => x[0].rank - y[0].rank);
+  const counts = { pending: 0, approved: 0, rejected: 0 };
+  pairs.forEach(([e]) => counts[statusOf(e.proposal.proposal_id)]++);
+  const bits = [];
+  if (counts.approved) bits.push(`${counts.approved} approved and staged as ${counts.approved > 1 ? "paused drafts" : "a paused draft"}`);
+  if (counts.rejected) bits.push(`${counts.rejected} rejected`);
+  if (counts.pending) bits.push(`${counts.pending} awaiting your decision`);
+
+  // Build the document first so footnote numbers follow reading order.
+  const lede = `<p class="lede">${esc(b.headline.text)}${cites(b.headline.evidence_ids)}</p>`;
+  const happened = `<h2>What happened last week</h2><ul class="claims">${b.what_happened.map(claim).join("")}</ul>`;
+  const why = `<h2>Why it happened</h2><ul class="claims">${b.why.map(claim).join("")}</ul>`;
+  const exps = `<h2>The three experiments to run next</h2>${pairs.map(([e, v]) => experiment(e, v)).join("")}`;
+  const creative = `<h2>Creative recommendations</h2><ul class="claims">${b.creative_recommendations.map(claim).join("")}</ul>`;
+  const risks = `<h2>Risks and observations</h2><ul class="claims">${b.risks_and_observations.map(claim).join("")}</ul>`;
+  const limits = `<h2>What the data cannot tell us yet</h2><ul class="claims">${S.data_limits.map((id) => `<li>${esc(S.evidence[id].statement)}${cites([id])}</li>`).join("")}</ul>`;
+  const held = S.brief.held_back.length ? `<h2>Held back by the checks</h2><ul class="fine">${S.brief.held_back.map((h) => `<li>“${esc(h.text)}” was removed: ${esc(h.reasons.join("; "))}</li>`).join("")}</ul>` : "";
+
+  app.innerHTML = `
+    <header class="top"><h1>Weekly Experimentation Brief</h1><span class="week">Week of ${weekLabel(S.windows)}, paid campaigns on Google Ads, LinkedIn Ads and Meta</span></header>
+    <p class="standing"><strong>Nothing has launched.</strong> ${bits.join(", ")}. ${S.synthetic ? `<span class="sample">Synthetic sample data, not Harvey performance.</span>` : ""}${S.brief.run.mode !== "live" ? ` <span class="sample">This brief is a replay of a recorded run.</span>` : ""}</p>
+    <div class="layout">
+      <article class="sheet">
+        ${lede}${happened}${why}${exps}${creative}${risks}${limits}${held}
+        <details><summary>Assumptions the agent made</summary><ul class="fine">${S.assumptions.map((a) => `<li>${esc(a.assumption)} If wrong: ${esc(a.if_wrong)}</li>`).join("")}</ul></details>
+        <details><summary>What the agent did, step by step</summary><ol class="steps">${S.brief.trace.map((t) => `<li>Turn ${t.turn}: ${esc(t.event)}</li>`).join("")}</ol></details>
+      </article>
+      ${desk(pairs)}
+    </div>`;
+}
+
+/* ---- evidence drawer ---- */
+function dataView(data) {
+  if (data == null) return "";
+  let rows = Array.isArray(data) ? data : Array.isArray(data.shifts) ? data.shifts : null;
+  if (!rows && typeof data === "object") {
+    const entries = Object.entries(data).filter(([, v]) => v && typeof v === "object" && !Array.isArray(v));
+    const flat = entries.filter(([, v]) => Object.values(v).every((x) => x === null || typeof x !== "object"));
+    if (flat.length >= 2 && flat.length >= entries.length - 1) rows = flat.map(([k, v]) => ({ item: k.replace(/_/g, " "), ...v }));
+  }
+  const fmt = (v) => v == null ? "" : typeof v === "number" ? (Math.abs(v) >= 1000 ? num(v) : Number.isInteger(v) ? v : v.toFixed(2)) : typeof v === "object" ? JSON.stringify(v) : esc(v);
+  if (rows && rows.length && typeof rows[0] === "object") {
+    const cols = Object.keys(rows[0]).filter((c) => typeof rows[0][c] !== "object" || rows[0][c] === null).slice(0, 9);
+    return `<h3>The numbers behind it</h3><div class="tablewrap"><table><thead><tr>${cols.map((c) => `<th>${esc(c.replace(/_/g, " "))}</th>`).join("")}</tr></thead><tbody>${rows.slice(0, 20).map((r) => `<tr>${cols.map((c) => `<td>${fmt(r[c])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+  }
+  return `<h3>The numbers behind it</h3><pre>${esc(JSON.stringify(data, null, 2))}</pre>`;
+}
+async function openEvidence(id, trigger) {
+  const drawer = $("#drawer");
+  const res = await fetch("/api/evidence/" + encodeURIComponent(id));
+  const e = await res.json();
+  const [kind, meaning] = RELIABILITY[e.reliability] || [e.reliability, ""];
+  drawer.innerHTML = `<button class="btn close" data-act="close-drawer">Close</button>
+    <p class="eid">Evidence ${notes[id] || ""}, ${esc(e.id)}</p>
+    <h2>${esc(e.title)}</h2>
+    <p class="kind"><b>${esc(kind)}.</b> ${esc(meaning)}</p>
+    <p class="statement">${esc(e.statement)}</p>
+    ${e.caveats && e.caveats.length ? `<h3>Read it with this in mind</h3><ul>${e.caveats.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>` : ""}
+    ${dataView(e.data)}
+    <p class="small" style="margin-top:20px">Source: ${esc(e.source)}</p>`;
+  drawer.hidden = false;
+  requestAnimationFrame(() => drawer.classList.add("open"));
+  document.querySelectorAll('.cite[aria-expanded="true"]').forEach((c) => c.removeAttribute("aria-expanded"));
+  if (trigger) { trigger.setAttribute("aria-expanded", "true"); drawer.dataset.from = id; }
+  $(".close", drawer).focus();
+}
+function closeDrawer() {
+  const drawer = $("#drawer");
+  drawer.classList.remove("open");
+  document.querySelectorAll('.cite[aria-expanded="true"]').forEach((c) => { c.removeAttribute("aria-expanded"); c.focus(); });
+  setTimeout(() => { drawer.hidden = true; }, 230);
+}
+
+/* ---- actions ---- */
+async function post(url, body) {
+  const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  return { ok: res.ok, data: await res.json() };
+}
+function findProposal(id) { return S.brief.brief.experiments.find((e) => e.proposal.proposal_id === id).proposal; }
+async function refreshPreview(id) {
+  const { data } = await post("/api/preview", { proposal_id: id, edits: ui.editing[id] });
+  ui.preview[id] = data;
+  render();
+  const el = document.activeElement;   // keep typing position after re-render
+}
+async function decide(id, decision) {
+  const name = reviewer().trim();
+  if (!name) { ui.error[id] = "Add your name under “Deciding as” first. Every decision is recorded against a person."; render(); $("#reviewer").focus(); return; }
+  const noteEl = document.querySelector(`[data-note="${CSS.escape(id)}"]`);
+  const { ok, data } = await post("/api/decisions", { proposal_id: id, decision, reviewer: name, note: noteEl ? noteEl.value : "", edits: decision === "approved" ? ui.editing[id] || null : null });
+  if (!ok) { ui.error[id] = data.error + (data.blocks && data.blocks.length ? " " + data.blocks.map((b) => b.message).join(" ") : ""); render(); return; }
+  S = data; delete ui.error[id]; delete ui.editing[id]; delete ui.preview[id];
+  if (decision === "approved") ui.showDraft[id] = true;
+  render();
+  document.getElementById("exp-" + id).querySelector(".decision").scrollIntoView({ block: "nearest" });
+}
+
+document.addEventListener("click", (ev) => {
+  const cite = ev.target.closest(".cite");
+  if (cite) { openEvidence(cite.dataset.eid, cite); return; }
+  const btn = ev.target.closest("[data-act]");
+  if (!btn) return;
+  const id = btn.dataset.id, act = btn.dataset.act;
+  if (act === "close-drawer") closeDrawer();
+  else if (act === "approve") decide(id, "approved");
+  else if (act === "reject") decide(id, "rejected");
+  else if (act === "reopen") decide(id, "reopened");
+  else if (act === "toggle-draft") { ui.showDraft[id] = !ui.showDraft[id]; render(); }
+  else if (act === "cancel-edit") { delete ui.editing[id]; delete ui.preview[id]; delete ui.error[id]; render(); }
+  else if (act === "edit") { delete ui.error[id]; const p = findProposal(id); ui.editing[id] = { daily_budget_per_arm: p.daily_budget_per_arm, runtime_days: p.runtime_days }; render(); refreshPreview(id); }
+});
+let typing = null;
+document.addEventListener("input", (ev) => {
+  const t = ev.target;
+  if (t.id === "reviewer") {
+    localStorage.setItem("reviewer", t.value);
+    ui.error = {};                                   // the missing-name message no longer applies
+    document.querySelectorAll(".error").forEach((e) => e.remove());
+    return;
+  }
+  if (t.dataset.edit) {
+    const id = t.dataset.id, key = t.dataset.edit;
+    ui.editing[id][key] = Number(t.value);
+    clearTimeout(typing);
+    typing = setTimeout(async () => {
+      const { data } = await post("/api/preview", { proposal_id: id, edits: ui.editing[id] });
+      ui.preview[id] = data;
+      const focusId = document.activeElement && document.activeElement.id;
+      render();
+      if (focusId) { const el = document.getElementById(focusId); if (el) { el.focus(); const v = el.value; el.value = ""; el.value = v; } }
+    }, 350);
+  }
+});
+document.addEventListener("keydown", (ev) => { if (ev.key === "Escape" && !$("#drawer").hidden) closeDrawer(); });
+
+fetch("/api/state").then((r) => r.json()).then((data) => { S = data; render(); });
+</script>
+</body>
+</html>

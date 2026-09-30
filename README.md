@@ -16,7 +16,8 @@ data and does not represent Harvey performance.
 | Guardrails (validator for proposed experiments) | Built, tested |
 | Reasoning layer (model writes the brief and designs three experiments through tools) | Built, tested offline. Live run needs an API key |
 | Claim checker (every number traced to cited evidence) | Built, tested |
-| Approval UI and staged launch payloads | Next |
+| Approval screen (approve, edit or reject each experiment, with an append-only record) | Built, tested |
+| Staged launch drafts (the bonus: paused, platform-shaped, only after approval) | Built, tested. Written to a file; nothing is sent to an ad platform |
 | Live API connectors | Interface defined, not implemented |
 
 ## Quick start
@@ -29,9 +30,10 @@ cp .env.example .env                  # then paste your ANTHROPIC_API_KEY into .
 
 python -m growth_agent.brief          # the full agent: writes out/brief.md and out/brief.json
 python -m growth_agent.brief --replay examples/recorded_run.json   # same pipeline, no key, no cost
+python -m growth_agent.app            # the approval screen at http://localhost:8000
 
 python -m growth_agent.run            # analysis only: out/evidence_pack.json and out/analysis_report.md
-python -m pytest -q                   # 104 tests and evals
+python -m pytest -q                   # 119 tests and evals
 python -m growth_agent.run --validate examples/proposal_unsafe.json   # watch the guardrails block it
 python mcp_server.py                  # expose everything as MCP tools
 ```
@@ -61,9 +63,11 @@ python mcp_server.py                  # expose everything as MCP tools
      every number looked up in the evidence it cites; every experiment
      re-validated; problems go back to the model; leftovers are removed
                                   |
-                     HUMAN APPROVAL (next)  approve / edit / reject
+            HUMAN APPROVAL (approval.py, app.py)   approve / edit / reject
+        every decision appended to a log; edits re-checked by guardrails
                                   |
-                 STAGED in the ad platform as DRAFT or PAUSED
+                 STAGING (staging.py)   paused draft, only after approval
+       refuses without a recorded approval of the exact design
 ```
 
 The design rule: **code decides what is true, the model decides what to do
@@ -146,6 +150,34 @@ human reviewer, which is why approval is required and not optional.
 | Risks section referred to experiments as P1 and P3 | Review rejects internal ids in reader-facing text |
 | Second live run crashed: the model sent a proposal as a JSON string with a stray brace | Tool inputs are read tolerantly, and any tool failure goes back to the model instead of ending the run |
 
+## Human approval and staging
+
+`python -m growth_agent.app` opens the brief as a page a marketing lead can
+act on. Every number carries a footnote that opens the evidence behind it.
+Each experiment has three actions:
+
+- **Approve and stage draft.** Records the decision and writes a paused
+  launch draft to `out/staged/`. See `examples/staged_draft_example.json`.
+- **Edit budget or runtime.** The edited design is re-checked by the
+  guardrails as you type. A blocked edit cannot be approved.
+- **Reject.** Records the decision and the reason. Nothing is staged.
+
+What the code enforces, with a test for each:
+
+| Rule | Where |
+|---|---|
+| No draft without a recorded approval | `ApprovalDesk._stage` |
+| An approval covers one exact design (fingerprinted); change it and it needs a new approval | `staging.proposal_hash` |
+| Every decision names a person | `ApprovalDesk.decide` |
+| A draft can only be PAUSED or DRAFT, and says `spends_money: false` | `staging.build_draft` |
+| Approved tests together stay under the slate ceiling | `ApprovalDesk.decide` |
+| The decision log is appended to, never rewritten | `out/approvals.jsonl` |
+| No route, tool or function activates a campaign | tests assert the full route and tool lists |
+
+Launching stays a human action in the ad platform. The agent has no
+credentials and no activate call. With a live connector, staging would send
+the same draft to the platform's create call with a paused status.
+
 ## Imperfect data: what the agent found and does about it
 
 | Problem | What the agent does |
@@ -218,13 +250,17 @@ growth_agent/
     schema.py          the brief's structure
     render.py          brief.md
   brief.py             command line for the full agent
+  approval.py          decision log and the approval rules
+  staging.py           paused launch drafts
+  app.py               local web server for the approval screen
+  web/index.html       the approval screen
   guardrails.py        proposal validator
   pipeline.py          runs everything, holds the stated assumptions
   report.py            deterministic readout of the evidence pack
   run.py               command line
 mcp_server.py          MCP tools
-tests/                 104 tests and evals
-examples/              sound and unsafe proposals, a recorded agent run
+tests/                 119 tests and evals
+examples/              sound and unsafe proposals, a recorded agent run, a staged draft
 data/sample/           the four take-home CSVs
 out/                   generated evidence pack, report and brief
 ```
