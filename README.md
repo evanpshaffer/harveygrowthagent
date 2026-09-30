@@ -21,6 +21,8 @@ data and does not represent Harvey performance.
 
 ## Quick start
 
+Needs Python 3.10 or newer (the macOS system Python is 3.9 and will not work).
+
 ```bash
 pip install -r requirements.txt
 cp .env.example .env                  # then paste your ANTHROPIC_API_KEY into .env
