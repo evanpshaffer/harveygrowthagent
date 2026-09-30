@@ -92,6 +92,29 @@ class Config:
     # on purpose: only a human action outside this codebase can launch.
     allowed_staging_statuses: tuple[str, ...] = ("DRAFT", "PAUSED")
 
+    # ---- Reasoning layer -----------------------------------------------------
+    # Default model and a hard ceiling on turns, so a run has a bounded cost.
+    default_model: str = "claude-sonnet-5-5"
+    max_agent_turns: int = 12
+    max_submit_attempts: int = 3
+    max_output_tokens: int = 16_000
+    # USD per million tokens (input, output). Source: Claude model overview
+    # docs, checked 2026-09-30. Used only to report what a run cost.
+    model_prices: dict[str, tuple[float, float]] = field(
+        default_factory=lambda: {
+            "claude-fable-5-1": (10.0, 50.0),
+            "claude-opus-5-5": (4.0, 20.0),
+            "claude-sonnet-5-5": (2.0, 10.0),
+            "claude-haiku-4-5-20251001": (1.0, 5.0),
+        }
+    )
+    # Words that signal an assurance the agent has no evidence for. A creative
+    # recommendation containing one is sent back, because legal buyers read
+    # compliance and customer claims literally.
+    unsupported_assurance_terms: tuple[str, ...] = (
+        "soc 2", "soc2", "iso 27001", "hipaa", "gdpr", "certified", "guarantee", "guaranteed", "compliant",
+    )
+
     # ---- Label normalization ----------------------------------------------
     audience_aliases: dict[str, str] = field(
         default_factory=lambda: {

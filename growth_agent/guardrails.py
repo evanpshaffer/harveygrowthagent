@@ -27,6 +27,7 @@ class Arm(BaseModel):
     theme: str | None = None
     cta: str | None = None
     creative_id: str | None = None
+    targeting: str | None = None   # free text, for audience-targeting tests; reviewed by a person
 
 
 class ExperimentProposal(BaseModel):
@@ -63,7 +64,7 @@ def _vocab(result: Result) -> dict[str, set[str]]:
 def _differences(p: ExperimentProposal, creatives: pd.DataFrame) -> list[str]:
     """Which attributes differ between control and variant."""
     lib = creatives.set_index("creative_id")
-    diffs = [f for f in ("objective", "theme", "cta") if getattr(p.control, f) != getattr(p.variant, f)]
+    diffs = [f for f in ("objective", "theme", "cta", "targeting") if getattr(p.control, f) != getattr(p.variant, f)]
     ca, cb = p.control.creative_id, p.variant.creative_id
     if ca != cb and ca in lib.index and cb in lib.index:
         if lib.loc[ca, "format"] != lib.loc[cb, "format"]:
@@ -136,7 +137,7 @@ def validate(proposal: dict | ExperimentProposal, result: Result) -> dict:
     # R4. One variable at a time -----------------------------------------------------
     diffs = _differences(p, ds.creatives)
     if len(diffs) == 0:
-        block("one_variable", "Control and variant are identical on offer, theme, CTA and creative.")
+        block("one_variable", "Control and variant are identical on offer, theme, CTA, creative and targeting.")
     elif len(diffs) > 1:
         block("one_variable", f"Control and variant differ on {', '.join(diffs)}. A result could not be attributed to one cause.")
 
@@ -210,7 +211,8 @@ def validate(proposal: dict | ExperimentProposal, result: Result) -> dict:
                 block("settled_question", msg + " Set retest_of with a reason if a repeat is intended.")
             elif e["tier"] == "directional":
                 warn("settled_question", msg + " A confirmation test is reasonable; say so by setting retest_of.")
-    text = " ".join([p.title, p.hypothesis, p.variant.description]).lower()
+    # Only the variant is checked: naming a known loser as the thing being beaten is fine.
+    text = " ".join([p.variant.description, p.variant.targeting or ""]).lower()
     for e in exps.values():
         if e["parsed"] or not e["usable_as_evidence"] or str(e["logged_result"]).lower() != "loss":
             continue

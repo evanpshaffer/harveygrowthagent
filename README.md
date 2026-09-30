@@ -14,7 +14,8 @@ data and does not represent Harvey performance.
 | Integration layer (connectors, canonical schema, MCP server) | Built, tested |
 | Analysis engine (data quality, what happened, why, experiment trust, signals) | Built, tested |
 | Guardrails (validator for proposed experiments) | Built, tested |
-| Reasoning layer (model turns evidence into the Weekly Experimentation Brief) | Next |
+| Reasoning layer (model writes the brief and designs three experiments through tools) | Built, tested offline. Live run needs an API key |
+| Claim checker (every number traced to cited evidence) | Built, tested |
 | Approval UI and staged launch payloads | Next |
 | Live API connectors | Interface defined, not implemented |
 
@@ -22,10 +23,14 @@ data and does not represent Harvey performance.
 
 ```bash
 pip install -r requirements.txt
-python -m growth_agent.run            # writes out/evidence_pack.json and out/analysis_report.md
-python -m pytest -q                   # 73 tests and evals
+cp .env.example .env                  # then paste your ANTHROPIC_API_KEY into .env
+
+python -m growth_agent.brief          # the full agent: writes out/brief.md and out/brief.json
+python -m growth_agent.brief --replay examples/recorded_run.json   # same pipeline, no key, no cost
+
+python -m growth_agent.run            # analysis only: out/evidence_pack.json and out/analysis_report.md
+python -m pytest -q                   # 93 tests and evals
 python -m growth_agent.run --validate examples/proposal_unsafe.json   # watch the guardrails block it
-python -m growth_agent.run --validate examples/proposal_sound.json
 python mcp_server.py                  # expose everything as MCP tools
 ```
 
@@ -46,11 +51,13 @@ python mcp_server.py                  # expose everything as MCP tools
                        EVIDENCE PACK (evidence.py)
         every fact has an id, a reliability level, caveats and its data
                                   |
-                    REASONING LAYER (next)            the only model step
-      writes the brief and designs experiments, citing evidence ids only
+                    REASONING LAYER (agent/)          the only model step
+   reads evidence through tools, designs experiments, tests each design
+   against the guardrails, submits a structured brief citing evidence ids
                                   |
-                       GUARDRAILS (guardrails.py)     deterministic
-        blocks unsafe or unsound proposals with the reason for each
+              CLAIM CHECK + GUARDRAILS (agent/claims.py, guardrails.py)
+     every number looked up in the evidence it cites; every experiment
+     re-validated; problems go back to the model; leftovers are removed
                                   |
                      HUMAN APPROVAL (next)  approve / edit / reject
                                   |
@@ -80,6 +87,34 @@ runs.**
    model designs experiments from them. The guardrails check the designs.
 6. **Thresholds live in one file.** `growth_agent/config.py` holds every
    number with the reason for it.
+
+## The reasoning layer
+
+The model works through four tools: `get_evidence`, `list_creatives`,
+`validate_experiment` and `submit_brief`. It has no tool that can launch or
+spend. A run looks like this:
+
+1. It starts with a compact context: the evidence index (one sentence per
+   item), the ranked signals, the guardrail limits and the values that exist
+   in the data. About 6,000 tokens. It pulls full tables only when it needs them.
+2. It designs experiments and tests each one with `validate_experiment`. On
+   the sample data a LinkedIn Demo test is blocked as underpowered within the
+   budget ceiling, so the agent redesigns around offers LinkedIn can afford.
+3. It submits the brief. Code then checks it:
+   - **Claim check.** Every number in every sentence must appear in the
+     evidence that sentence cites.
+   - **Lag check.** Last week's qualified leads, opportunities and pipeline
+     can only be mentioned as provisional.
+   - **Assurance check.** Creative recommendations cannot contain compliance
+     or guarantee language.
+   - **Guardrails.** All three experiments are re-validated.
+4. Problems go back to the model, up to three submissions. Anything still
+   failing is removed from the brief and listed under "held back". Nothing
+   unverified ships.
+
+Every run reports its turns, tokens and cost at the bottom of the brief.
+`examples/recorded_run.json` is a scripted recording used for tests and
+offline demos. It is not a live run; `--record` replaces it with one.
 
 ## Imperfect data: what the agent found and does about it
 
@@ -144,13 +179,20 @@ growth_agent/
     experiments.py     experiment trust scoring
     signals.py         ranked opportunity signals
   evidence.py          the evidence pack
+  agent/
+    prompt.py          system prompt, tools, starting context
+    loop.py            agent loop, review, repair, live and replay clients
+    claims.py          claim checker
+    schema.py          the brief's structure
+    render.py          brief.md
+  brief.py             command line for the full agent
   guardrails.py        proposal validator
   pipeline.py          runs everything, holds the stated assumptions
   report.py            deterministic readout of the evidence pack
   run.py               command line
 mcp_server.py          MCP tools
-tests/                 73 tests and evals
-examples/              one sound and one unsafe proposal
+tests/                 93 tests and evals
+examples/              sound and unsafe proposals, a recorded agent run
 data/sample/           the four take-home CSVs
-out/                   generated evidence pack and report
+out/                   generated evidence pack, report and brief
 ```
