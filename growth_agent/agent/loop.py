@@ -204,6 +204,24 @@ def finalize(rev: Review, result: Result) -> tuple[Brief, list[dict], list[dict]
 
 # --------------------------------------------------------------------------- loop
 
+def as_object(value: Any) -> dict | None:
+    """Accept a tool argument that should be an object.
+
+    Models sometimes send a nested object as a JSON string, occasionally with a
+    stray trailing brace. Read the first JSON object out of it rather than
+    failing the run. Returns None if there is no object to read.
+    """
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, str):
+        try:
+            obj, _ = json.JSONDecoder().raw_decode(value.strip())
+        except ValueError:
+            return None
+        return obj if isinstance(obj, dict) else None
+    return None
+
+
 def _tool_result(result: Result, name: str, args: dict) -> tuple[Any, bool]:
     """Run a read or validate tool. Returns (payload, is_error)."""
     if name == "get_evidence":
@@ -213,7 +231,10 @@ def _tool_result(result: Result, name: str, args: dict) -> tuple[Any, bool]:
     if name == "list_creatives":
         return to_jsonable(result.dataset.creatives), False
     if name == "validate_experiment":
-        return to_jsonable(validate(args.get("proposal") or {}, result)), False
+        proposal = as_object(args.get("proposal"))
+        if proposal is None:
+            return {"error": "proposal must be a JSON object with the fields in the tool schema."}, True
+        return to_jsonable(validate(proposal, result)), False
     return {"error": f"unknown tool '{name}'"}, True
 
 
@@ -223,7 +244,7 @@ def _summarize(name: str, args: dict, payload: Any) -> str:
     if name == "list_creatives":
         return "read the creative library"
     if name == "validate_experiment":
-        title = (args.get("proposal") or {}).get("title", "untitled")
+        title = (as_object(args.get("proposal")) or {}).get("title", "untitled")
         if payload["verdict"] == "blocked":
             return f"'{title}' blocked: " + "; ".join(sorted({b['rule'] for b in payload['blocks']}))
         return f"'{title}' cleared for human review" + (f" with {len(payload['warnings'])} warning(s)" if payload["warnings"] else "")
@@ -262,7 +283,7 @@ def run_agent(result: Result, client: ModelClient, on_event: Callable[[str], Non
             name, args = call["name"], call.get("input") or {}
             if name == "submit_brief":
                 submits += 1
-                rev = review(args.get("brief"), result)
+                rev = review(as_object(args.get("brief")), result)
                 left = cfg.max_submit_attempts - submits
                 if rev.accepted:
                     payload, final = {"status": "accepted"}, rev
@@ -274,8 +295,13 @@ def run_agent(result: Result, client: ModelClient, on_event: Callable[[str], Non
                         final = rev
                 is_error = False
             else:
-                payload, is_error = _tool_result(result, name, args)
-                note = _summarize(name, args, payload)
+                # A tool failure is reported to the model, never allowed to end the run.
+                try:
+                    payload, is_error = _tool_result(result, name, args)
+                    note = _summarize(name, args, payload) if not is_error else f"{name} rejected the input: {payload['error']}"
+                except Exception as err:
+                    payload, is_error = {"error": f"{type(err).__name__}: {err}"}, True
+                    note = f"{name} failed and the error was returned to the model"
             say(f"  turn {turn}: {note}")
             trace.append({"turn": turn, "tool": name, "event": note})
             text = json.dumps(payload, default=str)

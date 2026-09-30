@@ -80,7 +80,7 @@ def validate(proposal: dict | ExperimentProposal, result: Result) -> dict:
     """Check a proposed experiment. Returns a verdict with every reason."""
     cfg = result.config
     try:
-        p = proposal if isinstance(proposal, ExperimentProposal) else ExperimentProposal(**proposal)
+        p = proposal if isinstance(proposal, ExperimentProposal) else ExperimentProposal.model_validate(proposal)
     except ValidationError as err:
         return {
             "proposal_id": proposal.get("proposal_id") if isinstance(proposal, dict) else None,

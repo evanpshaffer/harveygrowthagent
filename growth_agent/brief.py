@@ -49,6 +49,10 @@ def main() -> None:
     (out / "analysis_report.md").write_text(render(result))
     print(f"    {len(result.pack.ids())} evidence items, {len(result.signals)} signals")
 
+    # Remove any earlier brief first, so a failed run can never leave a stale one looking current.
+    for name in ("brief.md", "brief.json"):
+        (out / name).unlink(missing_ok=True)
+
     if args.replay:
         client = ReplayClient(args.replay)
         print(f"2/3 Reasoning layer: replaying {args.replay} (no API call)")
@@ -72,8 +76,9 @@ def main() -> None:
             sys.exit(
                 f"The Claude API call failed ({type(err).__name__}): {err}\n"
                 "  Check the key in .env, that the Console account has credits, and the model name "
-                f"('{args.model}').\n  Nothing was written to {out / 'brief.md'}."
+                f"('{args.model}').\n  No brief was written."
             )
+        print("\nThe run failed before a brief was written. Send the error above to whoever maintains the agent.", file=sys.stderr)
         raise
 
     print("3/3 Checks: every number matched to evidence, every experiment through the guardrails")

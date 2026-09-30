@@ -150,6 +150,25 @@ def test_what_the_model_cannot_fix_is_removed_and_reported(result, good_brief):
     assert "Held back: 2 item(s)" in render_brief(run, result)
 
 
+def test_a_proposal_sent_as_a_json_string_is_still_validated(result, good_brief):
+    """Seen in a live run: the model stringified the object and added a stray brace."""
+    proposal = good_brief["experiments"][0]["proposal"]
+    stringified = [{"type": "tool_use", "id": "v1", "name": "validate_experiment", "input": {"proposal": json.dumps(proposal) + "}"}}]
+    run = run_agent(result, ScriptedClient([stringified, submit(good_brief, 2)]))
+    assert "cleared for human review" in run.trace[0]["event"]
+
+
+def test_a_bad_tool_input_is_returned_to_the_model_and_the_run_continues(result, good_brief):
+    nonsense = [{"type": "tool_use", "id": "v1", "name": "validate_experiment", "input": {"proposal": "not json at all"}},
+                {"type": "tool_use", "id": "v2", "name": "validate_experiment", "input": {"proposal": {"title": 7}}},
+                {"type": "tool_use", "id": "v3", "name": "no_such_tool", "input": {}}]
+    client = ScriptedClient([nonsense, submit(good_brief, 2)])
+    run = run_agent(result, client)
+    sent_back = client.calls[1]["messages"][-1]["content"]
+    assert [r["is_error"] for r in sent_back] == [True, False, True]      # the malformed object is a normal 'blocked' verdict
+    assert len(run.brief.experiments) == 3
+
+
 def test_a_model_that_never_submits_is_stopped(result):
     chatter = [[{"type": "text", "text": "Still thinking."}] for _ in range(result.config.max_agent_turns)]
     with pytest.raises(AgentError, match="did not produce"):
