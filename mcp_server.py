@@ -14,13 +14,16 @@ from __future__ import annotations
 import os
 from functools import lru_cache
 
-from mcp.server.fastmcp import FastMCP
+try:                                              # mcp 2.x renamed FastMCP to MCPServer
+    from mcp.server import MCPServer as _Server
+except ImportError:                               # mcp 1.x
+    from mcp.server.fastmcp import FastMCP as _Server
 
 from growth_agent.analysis.metrics import to_jsonable
 from growth_agent.guardrails import validate
 from growth_agent.pipeline import ASSUMPTIONS, Result, build
 
-mcp = FastMCP("growth-agent")
+mcp = _Server("growth-agent")
 MAX_ROWS = 500
 
 
