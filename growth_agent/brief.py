@@ -50,8 +50,11 @@ def main() -> None:
     print(f"    {len(result.pack.ids())} evidence items, {len(result.signals)} signals")
 
     # Remove any earlier brief first, so a failed run can never leave a stale one looking current.
+    # Drafts staged for the previous brief's designs go too; the decision log itself is kept.
     for name in ("brief.md", "brief.json"):
         (out / name).unlink(missing_ok=True)
+    for draft in (out / "staged").glob("*.json") if (out / "staged").exists() else []:
+        draft.unlink()
 
     if args.replay:
         client = ReplayClient(args.replay)

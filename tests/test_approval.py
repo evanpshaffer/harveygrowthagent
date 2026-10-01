@@ -101,6 +101,20 @@ def test_reopening_withdraws_the_draft_and_keeps_the_history(desk, proposals):
     assert [e["decision"] for e in desk.log()] == ["approved", "reopened"]   # the log is appended to, never rewritten
 
 
+def test_an_old_approval_does_not_carry_over_to_a_new_design_with_the_same_id(desk, proposals):
+    """A fresh brief can reuse ids like P1. Last week's approval must not approve this week's test."""
+    desk.decide(proposals[0], "approved", "Reviewer")
+    assert proposals[0]["proposal_id"] in desk.current(proposals)
+    redesigned = [{**proposals[0], "hypothesis": "A different test under the same id."}]
+    assert desk.current(redesigned) == {}
+    assert len(desk.log()) == 1   # the record of the old decision is kept
+
+
+def test_an_approval_with_edits_still_counts_for_the_design_it_edited(desk, proposals):
+    desk.decide(proposals[0], "approved", "Reviewer", edits={"daily_budget_per_arm": 700})
+    assert desk.current(proposals)[proposals[0]["proposal_id"]]["decision"] == "approved"
+
+
 # ---- through the web API, as the approval screen uses it ------------------------------
 
 @pytest.fixture()

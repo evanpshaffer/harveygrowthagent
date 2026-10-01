@@ -33,7 +33,7 @@ python -m growth_agent.brief --replay examples/recorded_run.json   # same pipeli
 python -m growth_agent.app            # the approval screen at http://localhost:8000
 
 python -m growth_agent.run            # analysis only: out/evidence_pack.json and out/analysis_report.md
-python -m pytest -q                   # 119 tests and evals
+python -m pytest -q                   # 121 tests and evals
 python -m growth_agent.run --validate examples/proposal_unsafe.json   # watch the guardrails block it
 python mcp_server.py                  # expose everything as MCP tools
 ```
@@ -260,7 +260,7 @@ growth_agent/
   report.py            deterministic readout of the evidence pack
   run.py               command line
 mcp_server.py          MCP tools
-tests/                 119 tests and evals
+tests/                 121 tests and evals
 examples/              sound and unsafe proposals, a recorded agent run, a staged draft
 data/sample/           the four take-home CSVs
 out/                   generated evidence pack, report and brief

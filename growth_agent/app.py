@@ -123,6 +123,9 @@ def create_app(out_dir: str = "out", source: str = "csv") -> Starlette:
             for e in result.pack.items() if e.id in cited or e.id.startswith("DQ.")
         }
         cfg = result.config
+        proposals = [e["proposal"] for e in b["brief"]["experiments"]] if b else []
+        decisions = desk.current(proposals)
+        approved = {pid for pid, d in decisions.items() if d["decision"] == "approved"}
         return to_jsonable(
             {
                 "has_brief": b is not None,
@@ -136,9 +139,9 @@ def create_app(out_dir: str = "out", source: str = "csv") -> Starlette:
                 "kpis": headline_numbers(),
                 "charts": charts(),
                 "overview": overview(result),
-                "decisions": desk.latest(),
+                "decisions": decisions,
                 "log": desk.log(),
-                "staged": desk.staged(),
+                "staged": {pid: d for pid, d in desk.staged().items() if pid in approved},
                 "limits": {
                     "max_daily_budget": cfg.max_daily_budget,
                     "max_total_test_budget": cfg.max_total_test_budget,

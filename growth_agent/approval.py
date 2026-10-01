@@ -45,6 +45,24 @@ class ApprovalDesk:
             state[entry["proposal_id"]] = entry
         return state
 
+    def current(self, proposals: list[dict]) -> dict[str, dict]:
+        """Decisions that still apply to the designs in front of the reviewer.
+
+        A decision is tied to the fingerprint of the design it was made on. If a
+        new brief proposes a different design under the same id, the old decision
+        stays in the log but no longer counts, and the experiment is pending again.
+        """
+        live: dict[str, dict] = {}
+        latest = self.latest()
+        for p in proposals:
+            entry = latest.get(p["proposal_id"])
+            if not entry:
+                continue
+            edits = {k: v["to"] for k, v in (entry.get("edits") or {}).items()}
+            if entry["proposal_hash"] == proposal_hash(self.apply_edits(p, edits)):
+                live[p["proposal_id"]] = entry
+        return live
+
     def staged(self) -> dict[str, dict]:
         if not self.staged_dir.exists():
             return {}
