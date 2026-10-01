@@ -122,6 +122,10 @@ def test_the_screen_loads_the_brief_and_the_evidence_it_cites(client):
     assert "SEG.objective" in state["evidence"]
     assert client.get("/").status_code == 200
     assert client.get("/api/evidence/SEG.objective").json()["reliability"] == "observational"
+    # the stat tiles and charts carry numbers from the evidence pack, each tied to an evidence id
+    assert all(k["evidence"] in state["evidence"] for k in state["kpis"])
+    assert state["charts"]["offer_mix"]["platform"] == "Google" and state["charts"]["offer_mix"]["evidence"] in state["evidence"]
+    assert client.get("/fonts/geist.woff2").status_code == 200
 
 
 def test_approving_through_the_api_stages_the_draft(client, proposals):
@@ -140,4 +144,4 @@ def test_the_api_refuses_an_anonymous_or_blocked_approval(client, proposals):
 
 def test_the_api_has_no_route_that_launches(client):
     paths = {r.path for r in client.app.routes}
-    assert paths == {"/", "/api/state", "/api/evidence/{eid}", "/api/preview", "/api/decisions"}
+    assert paths == {"/", "/api/state", "/api/evidence/{eid}", "/api/preview", "/api/decisions", "/fonts"}   # /fonts serves the typeface files

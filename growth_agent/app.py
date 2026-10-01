@@ -15,13 +15,44 @@ from pathlib import Path
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, JSONResponse
-from starlette.routing import Route
+from starlette.routing import Mount, Route
+from starlette.staticfiles import StaticFiles
 
 from .analysis.metrics import to_jsonable
 from .approval import ApprovalDesk, DecisionRefused
 from .pipeline import ASSUMPTIONS, Result, build
 
 WEB = Path(__file__).parent / "web"
+
+# Evidence the page's stat tiles and charts are drawn from. Every figure on the
+# screen comes out of the evidence pack; the page computes nothing itself.
+OVERVIEW_EVIDENCE = ("WEEK.totals", "WEEK.program_status", "DQ.attribution_lag", "MIX.objective", "SEG.platform_objective")
+
+
+def overview(result: Result) -> dict:
+    """Headline figures and chart series, read straight from the evidence pack."""
+    pack = result.pack
+    week = pack.get("WEEK.totals").data
+    status = pack.get("WEEK.program_status").data
+    lag = pack.get("DQ.attribution_lag").data
+    mix = pack.get("MIX.objective").data
+    shifts = mix["shifts"]
+    platform = shifts.loc[shifts["change_points"].abs().idxmax(), "platform"]   # where the offer mix moved most
+    monthly = mix["monthly_share_pct"]
+    cells = pack.get("SEG.platform_objective").data
+    return {
+        "spend": week["spend"],
+        "conversions": week["conversions"],
+        "campaigns": week["campaigns"],
+        "weekly_spend": [{"week_end": w["week_end"], "spend": w["spend"]} for w in status["weekly_spend"]],
+        "peak_week": status["peak_week"],
+        "live_on_as_of": len(status["live_on_as_of"]),
+        "scheduled_after": len(status["scheduled_after_as_of"]),
+        "ql_completeness": lag["ql_completeness"],
+        "mix_platform": platform,
+        "mix_by_month": monthly[monthly["platform"] == platform].drop(columns="platform").to_dict("records"),
+        "offer_efficiency": cells[["platform", "objective", "pipeline_per_dollar", "spend"]].to_dict("records"),
+    }
 
 
 def create_app(out_dir: str = "out", source: str = "csv") -> Starlette:
@@ -39,9 +70,45 @@ def create_app(out_dir: str = "out", source: str = "csv") -> Starlette:
             return None
         return next((e["proposal"] for e in b["brief"]["experiments"] if e["proposal"]["proposal_id"] == proposal_id), None)
 
+    def headline_numbers() -> list[dict]:
+        """Stat tiles for the top of the page. Each one points at the evidence it came from."""
+        week = result.pack.get("WEEK.totals").data
+        status = result.pack.get("WEEK.program_status").data
+        return [
+            {"label": "Spend last week", "value": week["spend"]["this_week"], "format": "money",
+             "change_pct": week["spend"]["change_pct"], "note": "vs the week before", "evidence": "WEEK.totals"},
+            {"label": "Campaigns live", "value": week["campaigns"]["this_week"], "format": "count",
+             "note": f"{week['campaigns']['prior_week']} the week before", "evidence": "WEEK.spend_bridge"},
+            {"label": "Conversions", "value": week["conversions"]["this_week"], "format": "count",
+             "change_pct": week["conversions"]["change_pct"], "note": "vs the week before", "evidence": "WEEK.totals"},
+            {"label": "Scheduled to keep running", "value": len(status["scheduled_after_as_of"]), "format": "count",
+             "note": f"of {len(status['live_on_as_of'])} live on the last day", "evidence": "WEEK.program_status"},
+        ]
+
+    def charts() -> dict:
+        """Data for the two charts, taken straight from the evidence pack."""
+        mix = result.pack.get("MIX.objective").data
+        shifts = mix["shifts"]
+        platform = shifts.loc[shifts["change_points"].abs().idxmax(), "platform"]
+        monthly = mix["monthly_share_pct"]
+        monthly = monthly[monthly["platform"] == platform].sort_values("month")
+        offers = [c for c in monthly.columns if c not in ("platform", "month")]
+        po = result.pack.get("SEG.platform_objective").data
+        return {
+            "offer_mix": {
+                "evidence": "MIX.objective", "platform": platform, "months": monthly["month"].tolist(),
+                "series": {o: monthly[o].round(1).tolist() for o in offers},
+            },
+            "pipeline_per_dollar": {
+                "evidence": "SEG.platform_objective",
+                "platforms": sorted(po["platform"].unique().tolist()),
+                "values": {p: {r.objective: r.pipeline_per_dollar for r in po[po["platform"] == p].itertuples()} for p in po["platform"].unique()},
+            },
+        }
+
     def state() -> dict:
         b = brief()
-        cited: set[str] = set()
+        cited: set[str] = {"WEEK.totals", "WEEK.spend_bridge", "WEEK.program_status", "MIX.objective", "SEG.platform_objective"}
         if b:
             doc = b["brief"]
             claims = [doc["headline"], *doc["what_happened"], *doc["why"], *doc["creative_recommendations"], *doc["risks_and_observations"]]
@@ -50,6 +117,7 @@ def create_app(out_dir: str = "out", source: str = "csv") -> Starlette:
                 cited.update(e["proposal"]["evidence_ids"])
             for c in claims:
                 cited.update(c["evidence_ids"])
+        cited.update(OVERVIEW_EVIDENCE)
         index = {
             e.id: {"title": e.title, "reliability": e.reliability, "statement": e.statement}
             for e in result.pack.items() if e.id in cited or e.id.startswith("DQ.")
@@ -65,6 +133,9 @@ def create_app(out_dir: str = "out", source: str = "csv") -> Starlette:
                 "assumptions": ASSUMPTIONS,
                 "data_limits": [i for i in ("DQ.attribution_lag", "DQ.reconciliation", "DQ.daily_outcome_gaps")],
                 "evidence": index,
+                "kpis": headline_numbers(),
+                "charts": charts(),
+                "overview": overview(result),
                 "decisions": desk.latest(),
                 "log": desk.log(),
                 "staged": desk.staged(),
@@ -120,6 +191,7 @@ def create_app(out_dir: str = "out", source: str = "csv") -> Starlette:
             Route("/api/evidence/{eid}", get_evidence),
             Route("/api/preview", post_preview, methods=["POST"]),
             Route("/api/decisions", post_decision, methods=["POST"]),
+            Mount("/fonts", StaticFiles(directory=WEB / "fonts"), name="fonts"),
         ]
     )
 

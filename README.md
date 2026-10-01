@@ -153,7 +153,8 @@ human reviewer, which is why approval is required and not optional.
 ## Human approval and staging
 
 `python -m growth_agent.app` opens the brief as a page a marketing lead can
-act on. Every number carries a footnote that opens the evidence behind it.
+act on. Every claim carries a numbered marker that opens the evidence behind
+it, and the stat tiles and two charts are drawn from the same evidence pack.
 Each experiment has three actions:
 
 - **Approve and stage draft.** Records the decision and writes a paused
